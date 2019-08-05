@@ -4,7 +4,7 @@ const {
 	getJournalEntry,
 	getJournalEntryRange,
 	deleteJournalEntry,
-	setJournalEntryGoals
+	setJournalEntryTargets
 } = require('../handlers/journal');
 
 const { 
@@ -21,7 +21,7 @@ router.route('/:date')
 	.post(parseFood, handleJournalEntryUpdate)
 	.delete(deleteJournalEntry);
 
-router.route('/:date/goals')
-	.patch(setJournalEntryGoals);
+router.route('/:date/targets')
+	.patch(setJournalEntryTargets);
 
 module.exports = router;

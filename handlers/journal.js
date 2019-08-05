@@ -1,11 +1,12 @@
 const User = require('../models/User');
 const JournalEntry = require('../models/JournalEntry');
 const Food = require('../models/Food');
+const Meal = require('../models/Meal');
 const util = require('../shared/util');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 module.exports.getJournalEntry = async function(req, res, next) {
 	let {username, date} = req.params;
-
 	try {
 		let user = await User.findByUsername(username);
 
@@ -110,7 +111,7 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 					'diet.manual.macros.fats.trans': macros.fats.trans
 				},
 				$setOnInsert: {
-					'diet.goals': user.goals.diet
+					'diet.targets': user.targets.diet
 				}
 			},
 			{new: true, upsert: true}
@@ -129,6 +130,7 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 
 module.exports.addFoodToJournal = async function(req, res, next) {
 	let {username, date} = req.params;
+	let {meal} = req.query;
 	let {calories, macros, food, servings} = req.body;
 
 	try {
@@ -137,37 +139,58 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 			res.status(404);
 			return next(`No user found with username ${username}`);			
 		}
-		let entry = await JournalEntry.findOneAndUpdate(
+
+		let usersMeals = ['Breakfast', 'Lunch', 'Dinner'];
+		usersMeals = usersMeals.map(m => {
+			return {'name': m.toLowerCase()}
+		});
+		
+		await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date},
 			{
-				$inc: {
-					'diet.total.calories': calories,
-					'diet.total.macros.carbohydrates.total': macros.carbohydrates.total,
-					'diet.total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'diet.total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
-					'diet.total.macros.protein': macros.protein,
-					'diet.total.macros.fats.total': macros.fats.total,
-					'diet.total.macros.fats.saturated': macros.fats.saturated,
-					'diet.total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'diet.total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
-					'diet.total.macros.fats.trans': macros.fats.trans
-				},
-				$setOnInsert: {
-					'diet.goals': user.goals.diet
-				},
-				$push: {
-					'diet.foods': {'food': food, 'servings': servings}
+				$setOnInsert: 
+				{ 
+					'targets': user.targets.diet,
+					'meals': [...usersMeals]
 				}
 			},
-			{new: true, upsert: true}
+			{ 'upsert': true }
 		);
-
+		entry = await JournalEntry.findOneAndUpdate(
+			{'user': user.id, 'date': date, 'meals.name': meal.toLowerCase()},
+			{
+				$inc: {
+					'total.calories': calories,
+					'total.macros.carbohydrates.total': macros.carbohydrates.total,
+					'total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
+					'total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'total.macros.protein': macros.protein,
+					'total.macros.fats.total': macros.fats.total,
+					'total.macros.fats.saturated': macros.fats.saturated,
+					'total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
+					'total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'total.macros.fats.trans': macros.fats.trans,
+					'meals.$.total.calories': calories,
+					'meals.$.total.macros.carbohydrates.total': macros.carbohydrates.total,
+					'meals.$.total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
+					'meals.$.total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'meals.$.total.macros.protein': macros.protein,
+					'meals.$.total.macros.fats.total': macros.fats.total,
+					'meals.$.total.macros.fats.saturated': macros.fats.saturated,
+					'meals.$.total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
+					'meals.$.total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'meals.$.total.macros.fats.trans': macros.fats.trans,
+				},
+				$push: { 'meals.$.foods':  {'food': food, 'servings': servings }}
+			},
+			{new: true}
+		);
 		if (!entry) {
 			res.status(404);
 			return next(`No entry found for user ${username} on ${date}.`);
 		}
 
-		res.json(entry.diet);
+		res.json(entry);
 	} catch(err) {
 		next(err);
 	}
@@ -221,30 +244,41 @@ module.exports.removeMiscFromJournal = async function(req, res, next) {
 
 module.exports.removeFoodFromJournal = async function(req, res, next) {
 	let {username, date} = req.params;
-	let {calories, macros, totalFoodId} = req.body;
-
+	let {meal} = req.query;
+	let {calories, macros, loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 
 				'user': user.id, 
 				'date': date,
-				'diet.total.foods': { $elemMatch: { _id: totalFoodId } }
+				'meals.name': meal.toLowerCase(),
+				'meals.foods._id': ObjectId(loggedFoodId) 
 			},
 			{
 				$inc: {
-					'diet.total.calories': -calories,
-					'diet.total.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'diet.total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'diet.total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
-					'diet.total.macros.protein': -macros.protein,
-					'diet.total.macros.fats.total': -macros.fats.total,
-					'diet.total.macros.fats.saturated': -macros.fats.saturated,
-					'diet.total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'diet.total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
-					'diet.total.macros.fats.trans': -macros.fats.trans
+					'total.calories': -calories,
+					'total.macros.carbohydrates.total': -macros.carbohydrates.total,
+					'total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
+					'total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'total.macros.protein': -macros.protein,
+					'total.macros.fats.total': -macros.fats.total,
+					'total.macros.fats.saturated': -macros.fats.saturated,
+					'total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
+					'total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'total.macros.fats.trans': -macros.fats.trans,				
+					'meals.$.total.calories': -calories,
+					'meals.$.total.macros.carbohydrates.total': -macros.carbohydrates.total,
+					'meals.$.total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
+					'meals.$.total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'meals.$.total.macros.protein': -macros.protein,
+					'meals.$.total.macros.fats.total': -macros.fats.total,
+					'meals.$.total.macros.fats.saturated': -macros.fats.saturated,
+					'meals.$.total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
+					'meals.$.total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'meals.$.total.macros.fats.trans': -macros.fats.trans
 				},
-				$pull: { 'diet.foods': { $elemMatch: { _id: totalFoodId } } }
+				$pull: { 'meals.$.foods': { _id: ObjectId(loggedFoodId)  }}
 			},
 			{new: true}
 		);
@@ -252,7 +286,7 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 		if (!entry) {
 			return next('Food not found in the journal entry');
 		}
-		res.status(200).json(entry.diet);
+		res.status(200).json(entry);
 	}
 
 	catch(err) {
@@ -260,21 +294,21 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 	}
 }
 
-module.exports.setJournalEntryGoals = async function(req, res, next) {
+module.exports.setJournalEntryTargets = async function(req, res, next) {
 	let {username, date} = req.params;
-	let goals = req.body;
+	let targets = req.body;
 	try {
 		let user = await User.findByUsername(username);
 		let entry = await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date},
 			{
 				$set: {
-					'diet.goals': goals
+					'diet.targets': targets
 				}
 			},
 			{new: true}
 		)
-		res.json(entry.diet.goals);
+		res.json(entry.diet.targets);
 	} catch(err) {
 		next(err);
 	}
