@@ -43,7 +43,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 		let entries = await JournalEntry.find({
 			'user': user.id,
 			'date': { $gte: range.start, $lte: range.end }
-		}).select('date diet.total');
+		}).select('date total');
 
 		res.json(entries);
 	} catch(err) {
@@ -89,29 +89,29 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 			{'user': user.id, 'date': date},
 			{
 				$inc: {
-					'diet.total.calories': calories,
-					'diet.total.macros.carbohydrates.total': macros.carbohydrates.total,
-					'diet.total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'diet.total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
-					'diet.total.macros.protein': macros.protein,
-					'diet.total.macros.fats.total': macros.fats.total,
-					'diet.total.macros.fats.saturated': macros.fats.saturated,
-					'diet.total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'diet.total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
-					'diet.total.macros.fats.trans': macros.fats.trans,
-					'diet.manual.calories': calories,
-					'diet.manual.macros.carbohydrates.total': macros.carbohydrates.total,
-					'diet.manual.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'diet.manual.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
-					'diet.manual.macros.protein': macros.protein,
-					'diet.manual.macros.fats.total': macros.fats.total,
-					'diet.manual.macros.fats.saturated': macros.fats.saturated,
-					'diet.manual.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'diet.manual.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
-					'diet.manual.macros.fats.trans': macros.fats.trans
+					'total.calories': calories,
+					'total.macros.carbohydrates.total': macros.carbohydrates.total,
+					'total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
+					'total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'total.macros.protein': macros.protein,
+					'total.macros.fats.total': macros.fats.total,
+					'total.macros.fats.saturated': macros.fats.saturated,
+					'total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
+					'total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'total.macros.fats.trans': macros.fats.trans,
+					'manual.calories': calories,
+					'manual.macros.carbohydrates.total': macros.carbohydrates.total,
+					'manual.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
+					'manual.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'manual.macros.protein': macros.protein,
+					'manual.macros.fats.total': macros.fats.total,
+					'manual.macros.fats.saturated': macros.fats.saturated,
+					'manual.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
+					'manual.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'manual.macros.fats.trans': macros.fats.trans
 				},
 				$setOnInsert: {
-					'diet.targets': user.targets.diet
+					'targets': user.targets.diet
 				}
 			},
 			{new: true, upsert: true}
@@ -122,7 +122,7 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 			return next(`No entry found for user ${username} on ${date}.`);
 		}
 
-		res.json(entry.diet);
+		res.json(entry);
 	} catch(err) {
 		next(err);
 	}
@@ -208,26 +208,26 @@ module.exports.removeMiscFromJournal = async function(req, res, next) {
 			},
 			{
 				$inc: {
-					'diet.total.calories': -calories,
-					'diet.total.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'diet.total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'diet.total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
-					'diet.total.macros.protein': -macros.protein,
-					'diet.total.macros.fats.total': -macros.fats.total,
-					'diet.total.macros.fats.saturated': -macros.fats.saturated,
-					'diet.total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'diet.total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
-					'diet.total.macros.fats.trans': -macros.fats.trans,
-					'diet.manual.calories': -calories,
-					'diet.manual.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'diet.manual.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'diet.manual.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
-					'diet.manual.macros.protein': -macros.protein,
-					'diet.manual.macros.fats.total': -macros.fats.total,
-					'diet.manual.macros.fats.saturated': -macros.fats.saturated,
-					'diet.manual.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'diet.manual.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
-					'diet.manual.macros.fats.trans': -macros.fats.trans
+					'total.calories': -calories,
+					'total.macros.carbohydrates.total': -macros.carbohydrates.total,
+					'total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
+					'total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'total.macros.protein': -macros.protein,
+					'total.macros.fats.total': -macros.fats.total,
+					'total.macros.fats.saturated': -macros.fats.saturated,
+					'total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
+					'total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'total.macros.fats.trans': -macros.fats.trans,
+					'manual.calories': -calories,
+					'manual.macros.carbohydrates.total': -macros.carbohydrates.total,
+					'manual.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
+					'manual.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'manual.macros.protein': -macros.protein,
+					'manual.macros.fats.total': -macros.fats.total,
+					'manual.macros.fats.saturated': -macros.fats.saturated,
+					'manual.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
+					'manual.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'manual.macros.fats.trans': -macros.fats.trans
 				}
 			},
 			{new: true}
@@ -302,12 +302,12 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 			{'user': user.id, 'date': date},
 			{
 				$set: {
-					'diet.targets': targets
+					'targets': targets
 				}
 			},
 			{new: true}
 		)
-		res.json(entry.diet.targets);
+		res.json(entry.targets);
 	} catch(err) {
 		next(err);
 	}
