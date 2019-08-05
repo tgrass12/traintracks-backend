@@ -1,13 +1,13 @@
 const router = require('express').Router({ mergeParams: true });
 const journalRoutes = require('./journal');
 const {
-	getGoals,
-	setGoals
+	getTargets,
+	setTargets
 } = require('../handlers/user');
 
-router.route('/:username/goals')
-	.get(getGoals)
-	.patch(setGoals);
+router.route('/:username/targets')
+	.get(getTargets)
+	.patch(setTargets);
 
 router.use('/:username/journal', journalRoutes);
 
