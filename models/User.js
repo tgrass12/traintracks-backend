@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema({
 			type: Nutrients.schema,
 			default: Nutrients.schema
 		}
-	}
+	},
+	meals: ['Breakfast', 'Lunch', 'Dinner']
 });
 
 userSchema.static('findByUsername', function(username) {

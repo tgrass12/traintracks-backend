@@ -140,8 +140,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 			return next(`No user found with username ${username}`);			
 		}
 
-		let usersMeals = ['Breakfast', 'Lunch', 'Dinner'];
-		usersMeals = usersMeals.map(m => {
+		userMeals = user.meals.map(m => {
 			return {'name': m.toLowerCase()}
 		});
 		
@@ -151,7 +150,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 				$setOnInsert: 
 				{ 
 					'targets': user.targets.diet,
-					'meals': [...usersMeals]
+					'meals': [...userMeals]
 				}
 			},
 			{ 'upsert': true }
