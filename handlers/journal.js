@@ -17,11 +17,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
 		});
-
-		if (!entry) {
-			res.status(404);
-			return next(`No entry found for user ${username} on ${date}.`);
-		}
+		
 		res.json(entry);
 	} catch(err) {
 		next(err);
