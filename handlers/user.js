@@ -27,3 +27,13 @@ module.exports.setTargets = async function(req, res, next) {
 		next(err);
 	}
 }
+
+module.exports.getMeals = async function(req, res, next) {
+	let {username} = req.params;
+	try {
+		let user = await User.findByUsername(username);
+		res.json(user.meals);
+	} catch(err) {
+		next(err);
+	}
+}
