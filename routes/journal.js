@@ -8,13 +8,13 @@ const {
 } = require('../handlers/journal');
 
 const { 
-	parseFood,
+	preprocessFood,
 	handleJournalEntryUpdate
 } = require('../middleware/journal');
 
 router.route('/')
 	.get(getJournalEntry)
-	.post(parseFood, handleJournalEntryUpdate)
+	.post(preprocessFood, handleJournalEntryUpdate)
 	.delete(deleteJournalEntry);
 
 router.route('/range')

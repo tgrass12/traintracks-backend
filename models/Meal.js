@@ -1,27 +1,13 @@
 const mongoose = require('mongoose');
 const Nutrients = require('./Nutrients');
-const Food = require('./Food');
 
 const mealSchema = new mongoose.Schema({
 	name: {
 		type: String,
 		default: 'Lunch'
 	},
-	foods: [{
-		'food': { 
-			type: mongoose.Schema.Types.ObjectId, 
-			ref: 'food'
-		},
-		'servings': {
-			type: Number,
-			default: 1
-		}
-	}],
+	foods: [{ type: mongoose.Schema.Types.ObjectId, ref:'loggedfood'}],
 	total:  {
-		type: Nutrients.schema,
-		default: Nutrients.schema
-	},
-	manual: {
 		type: Nutrients.schema,
 		default: Nutrients.schema
 	}

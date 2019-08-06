@@ -1,26 +1,9 @@
 const User = require('../models/User');
 const JournalEntry = require('../models/JournalEntry');
 const Food = require('../models/Food');
+const LoggedFood = require('../models/LoggedFood');
 const Meal = require('../models/Meal');
-const util = require('../shared/util');
 const ObjectId = require('mongoose').Types.ObjectId;
-
-let quantifyFoods = function(foods) {
-	let quantifiedFoods = [];
-	for (let foodWithServings of foods) {
-		let servingSize = foodWithServings.servings;
-		let quantifiedFood = util.deepMapNumber(
-			foodWithServings.food,
-			(item) => item * servingSize
-		);
-		quantifiedFoods.push({
-			'_id': foodWithServings._id,
-			'servings': servingSize,
-			'food': quantifiedFood
-		});
-	}
-	return quantifiedFoods;
-}
 
 module.exports.getJournalEntry = async function(req, res, next) {
 	let {username} = req.params;
@@ -34,20 +17,12 @@ module.exports.getJournalEntry = async function(req, res, next) {
 		}
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
-		}).populate({
-			'path': 'meals.foods.food',
-			'select': '-_id -__v',
-		}).lean(true);
+		}).populate('meals.foods').lean(true);
 		
 		if (!entry) {
 			entry = await JournalEntry.createJournalFrame(user.meals, user.targets.diet);
 		}
 
-		else {
-			for (let i = 0; i < entry.meals.length; i++) {
-				entry.meals[i].foods = quantifyFoods(entry.meals[i].foods);
-			}
-		}
 		res.json(entry);
 
 	} catch(err) {
@@ -160,8 +135,7 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 module.exports.addFoodToJournal = async function(req, res, next) {
 	let {username} = req.params;
 	let {meal, date} = req.query;
-	let {calories, macros, food, servings} = req.body;
-
+	let {calories, macros, loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
 		if (!user) {
@@ -170,7 +144,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 		}
 
 		userMeals = user.meals.map(m => {
-			return {'name': m.toLowerCase()}
+			return {'name': m}
 		});
 		
 		await JournalEntry.findOneAndUpdate(
@@ -179,13 +153,13 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 				$setOnInsert: 
 				{ 
 					'targets': user.targets.diet,
-					'meals': [...userMeals]
+					'meals': userMeals
 				}
 			},
 			{ 'upsert': true }
 		);
 		entry = await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date, 'meals.name': meal.toLowerCase()},
+			{'user': user.id, 'date': date, 'meals.name': meal},
 			{
 				$inc: {
 					'total.calories': calories,
@@ -209,10 +183,10 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 					'meals.$.total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
 					'meals.$.total.macros.fats.trans': macros.fats.trans,
 				},
-				$push: { 'meals.$.foods':  {'food': food, 'servings': servings }}
+				$push: { 'meals.$.foods': loggedFoodId }
 			},
 			{new: true}
-		);
+		).select('meals');
 		if (!entry) {
 			res.status(404);
 			return next(`No entry found for user ${username} on ${date}.`);
@@ -275,15 +249,17 @@ module.exports.removeMiscFromJournal = async function(req, res, next) {
 module.exports.removeFoodFromJournal = async function(req, res, next) {
 	let {username} = req.params;
 	let {meal, date} = req.query;
-	let {calories, macros, loggedFoodId} = req.body;
+	let {loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
+		let loggedFood = await LoggedFood.findById(loggedFoodId);
+		let {calories, macros} = loggedFood.food;
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 
 				'user': user.id, 
 				'date': date,
-				'meals.name': meal.toLowerCase(),
-				'meals.foods._id': ObjectId(loggedFoodId) 
+				'meals.name': meal,
+				'meals.foods': loggedFoodId 
 			},
 			{
 				$inc: {
@@ -308,13 +284,21 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 					'meals.$.total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
 					'meals.$.total.macros.fats.trans': -macros.fats.trans
 				},
-				$pull: { 'meals.$.foods': { _id: ObjectId(loggedFoodId)  }}
+				$pull: { 'meals.$.foods': loggedFoodId }
 			},
 			{new: true}
 		);
 
+		await LoggedFood.findByIdAndDelete(loggedFoodId);
 		if (!entry) {
-			return next('Food not found in the journal entry');
+			return next({
+				err: 'Journal entry not found with given parameters.',
+				params: {
+					date: date,
+					meal: meal,
+					loggedFoodId: loggedFoodId
+				}
+			});
 		}
 		res.status(200).json(entry);
 	}

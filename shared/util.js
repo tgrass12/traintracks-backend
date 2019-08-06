@@ -1,4 +1,5 @@
 const dateFns = require('date-fns');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 let util = {};
 
@@ -6,7 +7,7 @@ let util = {};
 // based on the mapping function.
 // Does not map any other types.
 util.deepMapNumber = function(item, mapFunc) {
-    if (this.isObject(item)) {
+    if (this.isObject(item) && !(item instanceof ObjectId)) {
         let clone = Object.assign({}, item);
         Object.entries(clone).forEach(([key, value]) => {
             clone[key] = this.deepMapNumber(value, mapFunc);

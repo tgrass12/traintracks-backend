@@ -1,4 +1,5 @@
 const Food = require('../models/Food');
+const LoggedFood = require('../models/LoggedFood');
 
 const {
 	addMiscToJournal,
@@ -28,23 +29,29 @@ module.exports.handleJournalEntryUpdate = function(req, res, next) {
 	}
 }
 
-module.exports.parseFood = async function(req, res, next) {
+module.exports.preprocessFood = async function(req, res, next) {
 	let {food, servings} = req.body;
 	if (food) {
 		try {
-			let foodDoc = await Food.findById(food).lean().select('-__v');
-
-			if (!foodDoc) {
+			let foundFood = await Food.findById(food).select('-__v');
+			if (!foundFood) {
 				res.status(404);
 				return next(`No food found with id ${food}`);
 			}
+
 			if (!servings || typeof servings !== 'number') {
 				res.status(400);
 				return next('Servings not provided or is of invalid type');
 			}
-			let {calories, macros} = util.deepMapNumber(foodDoc, (v) => v * servings);
-			req.body.calories = calories;
-			req.body.macros = macros;
+
+			let loggedFood = await LoggedFood.create({
+				servings: servings,
+				food: foundFood
+			});
+
+			req.body.calories = loggedFood.food.calories;
+			req.body.macros = loggedFood.food.macros;
+			req.body.loggedFoodId = loggedFood._id;
 			next();
 		} catch(err) {
 			next(err);
