@@ -23,7 +23,8 @@ let quantifyFoods = function(foods) {
 }
 
 module.exports.getJournalEntry = async function(req, res, next) {
-	let {username, date} = req.params;
+	let {username} = req.params;
+	let {date} = req.query;
 	try {
 		let user = await User.findByUsername(username);
 
@@ -78,7 +79,8 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 }
 
 module.exports.deleteJournalEntry = async function(req, res, next) {
-	let {username, date} = req.params;
+	let {username} = req.params;
+	let {date} = req.query;
 
 	try {
 		let user = await User.findByUsername(username);
@@ -102,7 +104,8 @@ module.exports.deleteJournalEntry = async function(req, res, next) {
 }
 
 module.exports.addMiscToJournal = async function(req, res, next) {
-	let {username, date} = req.params;
+	let {username} = req.params;
+	let {date} = req.query;
 	let {calories, macros} = req.body;
 
 	try {
@@ -155,8 +158,8 @@ module.exports.addMiscToJournal = async function(req, res, next) {
 }
 
 module.exports.addFoodToJournal = async function(req, res, next) {
-	let {username, date} = req.params;
-	let {meal} = req.query;
+	let {username} = req.params;
+	let {meal, date} = req.query;
 	let {calories, macros, food, servings} = req.body;
 
 	try {
@@ -222,7 +225,8 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 }
 
 module.exports.removeMiscFromJournal = async function(req, res, next) {
-	let {username, date} = req.params;
+	let {username} = req.params;
+	let {date} = req.query;
 	let {calories, macros} = req.body;
 
 	try {
@@ -267,9 +271,10 @@ module.exports.removeMiscFromJournal = async function(req, res, next) {
 	}
 }
 
+//TODO: Doesn't work right now, gotta figure out a better design for this..
 module.exports.removeFoodFromJournal = async function(req, res, next) {
-	let {username, date} = req.params;
-	let {meal} = req.query;
+	let {username} = req.params;
+	let {meal, date} = req.query;
 	let {calories, macros, loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
@@ -320,7 +325,8 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 }
 
 module.exports.setJournalEntryTargets = async function(req, res, next) {
-	let {username, date} = req.params;
+	let {username} = req.params;
+	let {date} = req.query;
 	let targets = req.body;
 	try {
 		let user = await User.findByUsername(username);

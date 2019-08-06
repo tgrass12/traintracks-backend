@@ -38,6 +38,10 @@ module.exports.parseFood = async function(req, res, next) {
 				res.status(404);
 				return next(`No food found with id ${food}`);
 			}
+			if (!servings || typeof servings !== 'number') {
+				res.status(400);
+				return next('Servings not provided or is of invalid type');
+			}
 			let {calories, macros} = util.deepMapNumber(foodDoc, (v) => v * servings);
 			req.body.calories = calories;
 			req.body.macros = macros;
