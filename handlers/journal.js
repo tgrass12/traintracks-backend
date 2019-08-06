@@ -78,60 +78,6 @@ module.exports.deleteJournalEntry = async function(req, res, next) {
 	}
 }
 
-module.exports.addMiscToJournal = async function(req, res, next) {
-	let {username} = req.params;
-	let {date} = req.query;
-	let {calories, macros} = req.body;
-
-	try {
-		let user = await User.findByUsername(username);
-		if (!user) {
-			res.status(404);
-			return next(`No user found with username ${username}`);
-		}
-		let entry = await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date},
-			{
-				$inc: {
-					'total.calories': calories,
-					'total.macros.carbohydrates.total': macros.carbohydrates.total,
-					'total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
-					'total.macros.protein': macros.protein,
-					'total.macros.fats.total': macros.fats.total,
-					'total.macros.fats.saturated': macros.fats.saturated,
-					'total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
-					'total.macros.fats.trans': macros.fats.trans,
-					'manual.calories': calories,
-					'manual.macros.carbohydrates.total': macros.carbohydrates.total,
-					'manual.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'manual.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
-					'manual.macros.protein': macros.protein,
-					'manual.macros.fats.total': macros.fats.total,
-					'manual.macros.fats.saturated': macros.fats.saturated,
-					'manual.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'manual.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
-					'manual.macros.fats.trans': macros.fats.trans
-				},
-				$setOnInsert: {
-					'targets': user.targets.diet
-				}
-			},
-			{new: true, upsert: true}
-		);
-
-		if (!entry) {
-			res.status(404);
-			return next(`No entry found for user ${username} on ${date}.`);
-		}
-
-		res.json(entry);
-	} catch(err) {
-		next(err);
-	}
-}
-
 module.exports.addFoodToJournal = async function(req, res, next) {
 	let {username} = req.params;
 	let {meal, date} = req.query;
@@ -198,54 +144,6 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 	}
 }
 
-module.exports.removeMiscFromJournal = async function(req, res, next) {
-	let {username} = req.params;
-	let {date} = req.query;
-	let {calories, macros} = req.body;
-
-	try {
-		let user = await User.findByUsername(username);
-		let entry = await JournalEntry.findOneAndUpdate(
-			{ 
-				'user': user.id, 
-				'date': date,
-			},
-			{
-				$inc: {
-					'total.calories': -calories,
-					'total.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
-					'total.macros.protein': -macros.protein,
-					'total.macros.fats.total': -macros.fats.total,
-					'total.macros.fats.saturated': -macros.fats.saturated,
-					'total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
-					'total.macros.fats.trans': -macros.fats.trans,
-					'manual.calories': -calories,
-					'manual.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'manual.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'manual.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
-					'manual.macros.protein': -macros.protein,
-					'manual.macros.fats.total': -macros.fats.total,
-					'manual.macros.fats.saturated': -macros.fats.saturated,
-					'manual.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'manual.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
-					'manual.macros.fats.trans': -macros.fats.trans
-				}
-			},
-			{new: true}
-		);
-
-		res.status(200).json(entry);
-	}
-
-	catch(err) {
-		next(err);
-	}
-}
-
-//TODO: Doesn't work right now, gotta figure out a better design for this..
 module.exports.removeFoodFromJournal = async function(req, res, next) {
 	let {username} = req.params;
 	let {meal, date} = req.query;

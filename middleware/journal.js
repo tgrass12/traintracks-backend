@@ -2,30 +2,19 @@ const Food = require('../models/Food');
 const LoggedFood = require('../models/LoggedFood');
 
 const {
-	addMiscToJournal,
 	addFoodToJournal,
 	removeFoodFromJournal,
-	removeMiscFromJournal,
 } = require('../handlers/journal');
 
 const util = require('../shared/util');
 
 module.exports.handleJournalEntryUpdate = function(req, res, next) {
 	if (req.query.remove != null) {
-		if (req.body.loggedFoodId) {
-			removeFoodFromJournal(req, res, next);
-		} else {
-			removeMiscFromJournal(req, res, next);
-		}
+		removeFoodFromJournal(req, res, next);
 	}
 
 	else {
-		if (req.body.food) {
-			addFoodToJournal(req, res, next);
-		}
-		else {
-			addMiscToJournal(req, res, next);
-		}
+		addFoodToJournal(req, res, next);
 	}
 }
 
