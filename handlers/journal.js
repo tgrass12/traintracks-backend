@@ -5,6 +5,23 @@ const Meal = require('../models/Meal');
 const util = require('../shared/util');
 const ObjectId = require('mongoose').Types.ObjectId;
 
+let quantifyFoods = function(foods) {
+	let quantifiedFoods = [];
+	for (let foodWithServings of foods) {
+		let servingSize = foodWithServings.servings;
+		let quantifiedFood = util.deepMapNumber(
+			foodWithServings.food,
+			(item) => item * servingSize
+		);
+		quantifiedFoods.push({
+			'_id': foodWithServings._id,
+			'servings': servingSize,
+			'food': quantifiedFood
+		});
+	}
+	return quantifiedFoods;
+}
+
 module.exports.getJournalEntry = async function(req, res, next) {
 	let {username, date} = req.params;
 	try {
@@ -16,9 +33,22 @@ module.exports.getJournalEntry = async function(req, res, next) {
 		}
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
-		});
+		}).populate({
+			'path': 'meals.foods.food',
+			'select': '-_id -__v',
+		}).lean(true);
 		
+		if (!entry) {
+			entry = await JournalEntry.createJournalFrame(user.meals, user.targets.diet);
+		}
+
+		else {
+			for (let i = 0; i < entry.meals.length; i++) {
+				entry.meals[i].foods = quantifyFoods(entry.meals[i].foods);
+			}
+		}
 		res.json(entry);
+
 	} catch(err) {
 		next(err);
 	}

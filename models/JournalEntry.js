@@ -11,6 +11,22 @@ const journalEntrySchema = new mongoose.Schema({
 	targets: Nutrients.schema
 });
 
+journalEntrySchema.static('createJournalFrame', function(mealNames, targets) {
+	try {
+		let emptyJournal = {
+			total: new Nutrients(),
+			targets: targets,
+			meals: []
+		};
+		for (let meal of mealNames) {
+			emptyJournal.meals.push(new Meal({name: meal}));
+		}
+		return emptyJournal;
+	} catch(err) {
+		return {'err': err};
+	}	
+});
+
 const JournalEntry = mongoose.model('journalentry', journalEntrySchema);
 
 module.exports = JournalEntry;

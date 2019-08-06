@@ -17,13 +17,16 @@ const mealSchema = new mongoose.Schema({
 			default: 1
 		}
 	}],
-	total:  Nutrients.schema,
+	total:  {
+		type: Nutrients.schema,
+		default: Nutrients.schema
+	},
 	manual: {
 		type: Nutrients.schema,
 		default: Nutrients.schema
 	}
 });
 
-const Meal  = mongoose.model('meal', mealSchema);
+const Meal = mongoose.model('meal', mealSchema);
 
-module.exports = Meal;
+module.exports = Meal; 
