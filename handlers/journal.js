@@ -7,8 +7,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const util = require('../shared/util');
 
 module.exports.getJournalEntry = async function(req, res, next) {
-	let {username} = req.params;
-	let {date} = req.query;
+	let {username, date} = req.params;
 	try {
 		let user = await User.findByUsername(username);
 
@@ -55,8 +54,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 }
 
 module.exports.deleteJournalEntry = async function(req, res, next) {
-	let {username} = req.params;
-	let {date} = req.query;
+	let {username, date} = req.params;
 
 	try {
 		let user = await User.findByUsername(username);
@@ -80,8 +78,8 @@ module.exports.deleteJournalEntry = async function(req, res, next) {
 }
 
 module.exports.addFoodToJournal = async function(req, res, next) {
-	let {username} = req.params;
-	let {meal, date} = req.query;
+	let {username, date} = req.params;
+	let {meal} = req.query;
 	let {calories, macros, loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
@@ -146,8 +144,8 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 }
 
 module.exports.removeFoodFromJournal = async function(req, res, next) {
-	let {username} = req.params;
-	let {meal, date} = req.query;
+	let {username, date} = req.params;
+	let {meal} = req.query;
 	let {loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
@@ -208,8 +206,7 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 }
 
 module.exports.setJournalEntryTargets = async function(req, res, next) {
-	let {username} = req.params;
-	let {date} = req.query;
+	let {username, date} = req.params;
 	let targets = req.body;
 	try {
 		let user = await User.findByUsername(username);

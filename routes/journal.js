@@ -13,7 +13,7 @@ const {
 	handleJournalEntryUpdate
 } = require('../middleware/journal');
 
-router.route('/')
+router.route('/:date')
 	.get(getJournalEntry)
 	.post(preprocessFood, handleJournalEntryUpdate)
 	.delete(deleteJournalEntry);
