@@ -4,6 +4,7 @@ const Food = require('../models/Food');
 const LoggedFood = require('../models/LoggedFood');
 const Meal = require('../models/Meal');
 const ObjectId = require('mongoose').Types.ObjectId;
+const util = require('../shared/util');
 
 module.exports.getJournalEntry = async function(req, res, next) {
 	let {username} = req.params;
@@ -45,7 +46,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 		let entries = await JournalEntry.find({
 			'user': user.id,
 			'date': { $gte: range.start, $lte: range.end }
-		}).select('date total');
+		}).select('date total').lean(true);
 
 		res.json(entries);
 	} catch(err) {
