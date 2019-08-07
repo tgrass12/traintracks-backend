@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Macros = require('./Macros');
+const Micros = require('./Micros');
 
 const nutrientsSchema = new mongoose.Schema({
 	calories: {
@@ -9,6 +10,10 @@ const nutrientsSchema = new mongoose.Schema({
 	macros:  {
 		type: Macros.schema,
 		default: Macros.schema
+	},
+	micros: {
+		type: Micros.schema,
+		default: Micros.schema
 	}
 }, {_id: false});
 

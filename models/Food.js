@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Macros = require('./Macros');
+const Micros = require('./Micros');
 
 const foodSchema = new mongoose.Schema({
 	name: {
@@ -10,7 +11,14 @@ const foodSchema = new mongoose.Schema({
 		type: Number,
 		required: true
 	},
-	macros: Macros.schema
+	macros: {
+		type: Macros.schema,
+		default: Macros.schema
+	},
+	micros: {
+		type: Micros.schema,
+		default: Macros.schema
+	}
 });
 
 const Food = mongoose.model('food', foodSchema);
