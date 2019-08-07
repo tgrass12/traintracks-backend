@@ -7,6 +7,10 @@ const journalEntrySchema = new mongoose.Schema({
 	user: { type: mongoose.Schema.Types.ObjectId, ref: 'user'},
 	date: String,
 	meals: [Meal.schema],
+	water: {
+		type: Number,
+		default: 0
+	},
 	total: Nutrients.schema,
 	targets: Nutrients.schema
 });

@@ -227,3 +227,29 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 		next(err);
 	}
 }
+
+module.exports.setWaterIntake = async function(req, res, next) {
+	let {username, date} = req.params;
+	let {waterAmount} = req.body;
+
+	try {
+		let user = await User.findByUsername(username);
+		let entry = await JournalEntry.findOneAndUpdate(
+			{'user': user.id, 'date': date},
+			{
+				$inc: {
+					water: waterAmount
+				}
+			},
+			{new: true}
+		).select('water');
+
+		if (!entry) {
+			res.status(404);
+			return next(`No journal found for ${username} for date '${date}'`);
+		}
+		res.json(entry);
+	} catch(err) {
+		next(err);
+	}
+}
