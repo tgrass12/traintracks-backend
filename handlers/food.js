@@ -14,13 +14,14 @@ module.exports.getAllFoods = async function(req, res, next) {
 
 /* Add a new food to the Foods collection */
 module.exports.addFood = async function(req, res, next) {
-	let {name, calories, macros} = req.body;
+	let {name, cals, macros, micros} = req.body;
 	
 	try {
 		let newFood = await Food.create({
 			'name': name,
-			'calories': calories,
-			'macros': macros
+			'cals': cals,
+			'macros': macros,
+			'micros': micros
 		});
 		res.json(newFood);
 	}

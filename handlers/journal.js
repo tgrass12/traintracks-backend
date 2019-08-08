@@ -18,9 +18,12 @@ module.exports.getJournalEntry = async function(req, res, next) {
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
 		}).populate('meals.foods').lean(true);
-		
+
 		if (!entry) {
-			entry = await JournalEntry.createJournalFrame(user.meals, user.targets.diet);
+			let meals = user.meals.map(m => {
+				return {"name": m}
+			});
+			return res.json({"meals": meals, "targets": user.targets.diet});
 		}
 
 		res.json(entry);
@@ -80,7 +83,7 @@ module.exports.deleteJournalEntry = async function(req, res, next) {
 module.exports.addFoodToJournal = async function(req, res, next) {
 	let {username, date} = req.params;
 	let {meal} = req.query;
-	let {calories, macros, loggedFoodId} = req.body;
+	let {cals, macros, loggedFoodId} = req.body;
 	try {
 		let user = await User.findByUsername(username);
 		if (!user) {
@@ -103,29 +106,29 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 			},
 			{ 'upsert': true }
 		);
-		entry = await JournalEntry.findOneAndUpdate(
+		let entry = await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date, 'meals.name': meal},
 			{
 				$inc: {
-					'total.calories': calories,
-					'total.macros.carbohydrates.total': macros.carbohydrates.total,
-					'total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'total.cals': cals,
+					'total.macros.carbs.total': macros.carbs.total,
+					'total.macros.carbs.sugars': macros.carbs.sugars,
+					'total.macros.carbs.fiber': macros.carbs.fiber,
 					'total.macros.protein': macros.protein,
 					'total.macros.fats.total': macros.fats.total,
-					'total.macros.fats.saturated': macros.fats.saturated,
-					'total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'total.macros.fats.sat': macros.fats.sat,
+					'total.macros.fats.poly': macros.fats.poly,
+					'total.macros.fats.mono': macros.fats.mono,
 					'total.macros.fats.trans': macros.fats.trans,
-					'meals.$.total.calories': calories,
-					'meals.$.total.macros.carbohydrates.total': macros.carbohydrates.total,
-					'meals.$.total.macros.carbohydrates.sugars': macros.carbohydrates.sugars,
-					'meals.$.total.macros.carbohydrates.fiber': macros.carbohydrates.fiber,
+					'meals.$.total.cals': cals,
+					'meals.$.total.macros.carbs.total': macros.carbs.total,
+					'meals.$.total.macros.carbs.sugars': macros.carbs.sugars,
+					'meals.$.total.macros.carbs.fiber': macros.carbs.fiber,
 					'meals.$.total.macros.protein': macros.protein,
 					'meals.$.total.macros.fats.total': macros.fats.total,
-					'meals.$.total.macros.fats.saturated': macros.fats.saturated,
-					'meals.$.total.macros.fats.polyUnsaturated': macros.fats.polyUnsaturated,
-					'meals.$.total.macros.fats.monoUnsaturated': macros.fats.monoUnsaturated,
+					'meals.$.total.macros.fats.sat': macros.fats.sat,
+					'meals.$.total.macros.fats.poly': macros.fats.poly,
+					'meals.$.total.macros.fats.mono': macros.fats.mono,
 					'meals.$.total.macros.fats.trans': macros.fats.trans,
 				},
 				$push: { 'meals.$.foods': loggedFoodId }
@@ -150,7 +153,11 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 	try {
 		let user = await User.findByUsername(username);
 		let loggedFood = await LoggedFood.findById(loggedFoodId);
-		let {calories, macros} = loggedFood.food;
+		if (!loggedFood) {
+			res.status(404);
+			return next(`No logged food found with id ${loggedFoodId}`)
+		}
+		let {cals, macros} = loggedFood.food;
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 
 				'user': user.id, 
@@ -160,25 +167,25 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 			},
 			{
 				$inc: {
-					'total.calories': -calories,
-					'total.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'total.cals': -cals,
+					'total.macros.carbs.total': -macros.carbs.total,
+					'total.macros.carbs.sugars': -macros.carbs.sugars,
+					'total.macros.carbs.fiber': -macros.carbs.fiber,
 					'total.macros.protein': -macros.protein,
 					'total.macros.fats.total': -macros.fats.total,
-					'total.macros.fats.saturated': -macros.fats.saturated,
-					'total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'total.macros.fats.sat': -macros.fats.sat,
+					'total.macros.fats.poly': -macros.fats.poly,
+					'total.macros.fats.mono': -macros.fats.mono,
 					'total.macros.fats.trans': -macros.fats.trans,				
-					'meals.$.total.calories': -calories,
-					'meals.$.total.macros.carbohydrates.total': -macros.carbohydrates.total,
-					'meals.$.total.macros.carbohydrates.sugars': -macros.carbohydrates.sugars,
-					'meals.$.total.macros.carbohydrates.fiber': -macros.carbohydrates.fiber,
+					'meals.$.total.cals': -cals,
+					'meals.$.total.macros.carbs.total': -macros.carbs.total,
+					'meals.$.total.macros.carbs.sugars': -macros.carbs.sugars,
+					'meals.$.total.macros.carbs.fiber': -macros.carbs.fiber,
 					'meals.$.total.macros.protein': -macros.protein,
 					'meals.$.total.macros.fats.total': -macros.fats.total,
-					'meals.$.total.macros.fats.saturated': -macros.fats.saturated,
-					'meals.$.total.macros.fats.polyUnsaturated': -macros.fats.polyUnsaturated,
-					'meals.$.total.macros.fats.monoUnsaturated': -macros.fats.monoUnsaturated,
+					'meals.$.total.macros.fats.sat': -macros.fats.sat,
+					'meals.$.total.macros.fats.poly': -macros.fats.poly,
+					'meals.$.total.macros.fats.mono': -macros.fats.mono,
 					'meals.$.total.macros.fats.trans': -macros.fats.trans
 				},
 				$pull: { 'meals.$.foods': loggedFoodId }

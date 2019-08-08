@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const macrosSchema = new mongoose.Schema({
-	carbohydrates: {
+	carbs: {
 		total: {
 			type: Number,
 			default: 0
@@ -24,15 +24,15 @@ const macrosSchema = new mongoose.Schema({
 			type: Number,
 			default: 0
 		},
-		saturated: {
+		sat: {
 			type: Number,
 			default: 0
 		},
-		polyUnsaturated: {
+		poly: {
 			type: Number,
 			default: 0
 		},
-		monoUnsaturated: {
+		mono: {
 			type: Number,
 			default: 0
 		},

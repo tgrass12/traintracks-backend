@@ -7,10 +7,7 @@ const mealSchema = new mongoose.Schema({
 		default: 'Lunch'
 	},
 	foods: [{ type: mongoose.Schema.Types.ObjectId, ref:'loggedfood'}],
-	total:  {
-		type: Nutrients.schema,
-		default: Nutrients.schema
-	}
+	total:  Nutrients.schema
 });
 
 const Meal = mongoose.model('meal', mealSchema);
