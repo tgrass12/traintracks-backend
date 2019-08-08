@@ -1,6 +1,5 @@
 const Food = require('../models/Food');
 
-
 /* Get all foods in the Foods collection */
 module.exports.getAllFoods = async function(req, res, next) {
 	try {
@@ -9,6 +8,17 @@ module.exports.getAllFoods = async function(req, res, next) {
 	}
 	catch (err) {
 		next(err)
+	}
+}
+
+module.exports.getFood = async function(req, res, next) {
+	let {id} = req.params;
+
+	try {
+		let food = await Food.findById(id).select('-__v').lean();
+		res.json(food);
+	} catch(err) {
+		next(err);
 	}
 }
 

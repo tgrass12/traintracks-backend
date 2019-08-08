@@ -17,7 +17,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 		}
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
-		}).populate('meals.foods').lean(true);
+		}).populate('meals.foods').lean();
 
 		if (!entry) {
 			let meals = user.meals.map(m => {
@@ -35,7 +35,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 
 module.exports.getJournalEntryRange = async function(req, res, next) {
 	let {username} = req.params;
-	let {range, date} = req.query;
+	let {range, scope} = req.query;
 
 	try {
 		let user = await User.findByUsername(username);
@@ -43,12 +43,11 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 			res.status(404);
 			return next(`No user found with username ${username}`);
 		}
-
-		let range = util.getDateRange(date);
+		let range = util.getDateRange(scope);
 		let entries = await JournalEntry.find({
 			'user': user.id,
 			'date': { $gte: range.start, $lte: range.end }
-		}).select('date total').lean(true);
+		}).select('date total').lean();
 
 		res.json(entries);
 	} catch(err) {
@@ -133,7 +132,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 				},
 				$push: { 'meals.$.foods': loggedFoodId }
 			},
-			{new: true}
+			{new: true, lean: true}
 		).select('meals');
 		if (!entry) {
 			res.status(404);
