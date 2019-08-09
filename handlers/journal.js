@@ -103,7 +103,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 					'meals': userMeals
 				}
 			},
-			{ 'upsert': true }
+			{ 'upsert': true, 'setDefaultsOnInsert': true }
 		);
 		let entry = await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date, 'meals.name': meal},
@@ -249,8 +249,28 @@ module.exports.setWaterIntake = async function(req, res, next) {
 
 		if (!entry) {
 			res.status(404);
-			return next(`No journal found for ${username} for date '${date}'`);
+			return next(`No journal found for ${username} on '${date}'`);
 		}
+		res.json(entry);
+	} catch(err) {
+		next(err);
+	}
+}
+
+module.exports.getWaterIntake = async function(req, res, next) {
+	let {username, date} = req.params;
+
+	try {
+		let user = await User.findByUsername(username);
+		let entry = await JournalEntry.findOne({
+			'user': user.id, 'date': date
+		}).select('water -_id').lean();
+
+		if (!entry) {
+			res.status(404);
+			return next(`No journal found for ${username} on '${date}'`);
+		}
+
 		res.json(entry);
 	} catch(err) {
 		next(err);

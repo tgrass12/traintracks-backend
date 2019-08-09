@@ -5,6 +5,7 @@ const {
 	getJournalEntryRange,
 	deleteJournalEntry,
 	setJournalEntryTargets,
+	getWaterIntake,
 	setWaterIntake
 } = require('../handlers/journal');
 
@@ -25,6 +26,7 @@ router.route('/:date/targets')
 	.patch(setJournalEntryTargets);
 
 router.route('/:date/water')
+	.get(getWaterIntake)
 	.patch(setWaterIntake);
 
 module.exports = router;
