@@ -241,6 +241,36 @@ module.exports.setWaterIntake = async function(req, res, next) {
 
 	try {
 		let user = await User.findByUsername(username);
+
+		userMeals = user.meals.map(m => {
+			return {'name': m}
+		});
+		
+		//TODO: Handle default empty values better
+		await JournalEntry.findOneAndUpdate(
+			{'user': user.id, 'date': date},
+			{
+				$setOnInsert: 
+				{ 
+					'targets': user.targets.diet,
+					'meals': userMeals,
+					"total": {
+						'cals': 0,
+						'macros': {
+							'protein': 0,
+							'carbs': {
+								'total': 0
+							},
+							'fats': {
+								'total': 0
+							}
+						}
+					},
+				}
+			},
+			{ 'upsert': true, 'setDefaultsOnInsert': true }
+		);
+
 		let entry = await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date},
 			{

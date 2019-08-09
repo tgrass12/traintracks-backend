@@ -7,7 +7,7 @@ const nutrientsSchema = new mongoose.Schema({
 		type: Number,
 		default: 0
 	},
-	macros:  Macros.schema,
+	macros: Macros.schema,
 	micros: Micros.schema
 }, {_id: false});
 
