@@ -8,6 +8,15 @@ const {
 
 const util = require('../shared/util');
 
+module.exports.validateDateString = function(req, res, next) {
+	if (!util.isValidDateString(req.params.date)) {
+		res.status(400);
+		return next(`Invalid Date string. Should be in YYYY-MM-DD format.`);
+	}
+
+	next();
+}
+
 module.exports.handleJournalEntryUpdate = function(req, res, next) {
 	if (req.query.remove != null) {
 		removeFoodFromJournal(req, res, next);

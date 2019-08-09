@@ -11,11 +11,14 @@ const {
 
 const { 
 	preprocessFood,
-	handleJournalEntryUpdate
+	handleJournalEntryUpdate,
+	validateDateString
 } = require('../middleware/journal');
 
 router.route('/range')
 	.get(getJournalEntryRange);
+
+router.all('/:date', validateDateString);
 
 router.route('/:date')
 	.get(getJournalEntry)

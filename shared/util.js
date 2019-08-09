@@ -27,7 +27,27 @@ util.deepMapNumber = function(item, mapFunc) {
 	}
 }
 
+util.isValidDateString = function(dateStr) {
+    let format = 'YYYY-MM-DD';
+    let pattern = /^\d{4}-\d{2}-\d{2}$/;
+    
+    if (!pattern.test(dateStr)) return false;
+
+    let date = dateFns.parse(dateStr);
+    let reformatted = dateFns.format(dateStr, format)
+
+    if (reformatted !== dateStr) return false;
+
+    return true;
+}
+
 util.getDateRange = function(dateStr) {
+    if (!this.isValidDateString(dateStr)) {
+        throw new Error({
+            'name': 'ValidationError',
+            'message': 'Invalid Date string. Should be in YYYY-MM-DD format'
+        });
+    }
     let formatString = 'YYYY-MM-DD';
     let date = dateFns.parse(dateStr);
     let startOfMonth = dateFns.startOfMonth(date);

@@ -15,6 +15,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 			res.status(404);
 			return next(`No user found with username ${username}`);
 		}
+
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
 		}).populate('meals.foods').lean();
