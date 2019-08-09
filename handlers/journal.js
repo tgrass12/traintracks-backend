@@ -23,7 +23,11 @@ module.exports.getJournalEntry = async function(req, res, next) {
 			let meals = user.meals.map(m => {
 				return {"name": m}
 			});
-			return res.json({"meals": meals, "targets": user.targets.diet});
+			return res.json({
+				"meals": meals,
+				"targets": user.targets.diet,
+				"water": 0
+			});
 		}
 
 		res.json(entry);
