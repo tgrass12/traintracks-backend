@@ -52,7 +52,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 		let entries = await JournalEntry.find({
 			'user': user.id,
 			'date': { $gte: range.start, $lte: range.end }
-		}).select('date total').lean();
+		}).select('date logged').lean();
 
 		res.json(entries);
 	} catch(err) {
@@ -114,16 +114,16 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 			{'user': user.id, 'date': date, 'meals.name': meal},
 			{
 				$inc: {
-					'total.cals': cals,
-					'total.macros.carbs.total': macros.carbs.total,
-					'total.macros.carbs.sugars': macros.carbs.sugars,
-					'total.macros.carbs.fiber': macros.carbs.fiber,
-					'total.macros.protein': macros.protein,
-					'total.macros.fats.total': macros.fats.total,
-					'total.macros.fats.sat': macros.fats.sat,
-					'total.macros.fats.poly': macros.fats.poly,
-					'total.macros.fats.mono': macros.fats.mono,
-					'total.macros.fats.trans': macros.fats.trans,
+					'logged.cals': cals,
+					'logged.macros.carbs.total': macros.carbs.total,
+					'logged.macros.carbs.sugars': macros.carbs.sugars,
+					'logged.macros.carbs.fiber': macros.carbs.fiber,
+					'logged.macros.protein': macros.protein,
+					'logged.macros.fats.total': macros.fats.total,
+					'logged.macros.fats.sat': macros.fats.sat,
+					'logged.macros.fats.poly': macros.fats.poly,
+					'logged.macros.fats.mono': macros.fats.mono,
+					'logged.macros.fats.trans': macros.fats.trans,
 					'meals.$.total.cals': cals,
 					'meals.$.total.macros.carbs.total': macros.carbs.total,
 					'meals.$.total.macros.carbs.sugars': macros.carbs.sugars,
@@ -171,16 +171,16 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 			},
 			{
 				$inc: {
-					'total.cals': -cals,
-					'total.macros.carbs.total': -macros.carbs.total,
-					'total.macros.carbs.sugars': -macros.carbs.sugars,
-					'total.macros.carbs.fiber': -macros.carbs.fiber,
-					'total.macros.protein': -macros.protein,
-					'total.macros.fats.total': -macros.fats.total,
-					'total.macros.fats.sat': -macros.fats.sat,
-					'total.macros.fats.poly': -macros.fats.poly,
-					'total.macros.fats.mono': -macros.fats.mono,
-					'total.macros.fats.trans': -macros.fats.trans,				
+					'logged.cals': -cals,
+					'logged.macros.carbs.total': -macros.carbs.total,
+					'logged.macros.carbs.sugars': -macros.carbs.sugars,
+					'logged.macros.carbs.fiber': -macros.carbs.fiber,
+					'logged.macros.protein': -macros.protein,
+					'logged.macros.fats.total': -macros.fats.total,
+					'logged.macros.fats.sat': -macros.fats.sat,
+					'logged.macros.fats.poly': -macros.fats.poly,
+					'logged.macros.fats.mono': -macros.fats.mono,
+					'logged.macros.fats.trans': -macros.fats.trans,				
 					'meals.$.total.cals': -cals,
 					'meals.$.total.macros.carbs.total': -macros.carbs.total,
 					'meals.$.total.macros.carbs.sugars': -macros.carbs.sugars,
@@ -255,7 +255,7 @@ module.exports.setWaterIntake = async function(req, res, next) {
 				{ 
 					'targets': user.targets.diet,
 					'meals': userMeals,
-					"total": {
+					"logged": {
 						'cals': 0,
 						'macros': {
 							'protein': 0,
