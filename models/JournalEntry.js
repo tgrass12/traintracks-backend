@@ -11,7 +11,7 @@ const journalEntrySchema = new mongoose.Schema({
 		type: Number,
 		default: 0
 	},
-	total: Nutrients.schema,
+	logged: Nutrients.schema,
 	targets: Nutrients.schema
 });
 
