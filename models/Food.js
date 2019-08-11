@@ -21,6 +21,8 @@ const foodSchema = new mongoose.Schema({
 	}
 });
 
+foodSchema.index({ 'name':  'text' });
+
 const Food = mongoose.model('food', foodSchema);
 
 module.exports = Food;

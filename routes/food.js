@@ -2,12 +2,12 @@ const router = require('express').Router({ mergeParams: true });
 
 const { 
 	addFood,
-	getAllFoods,
+	queryFoods,
 	getFood
 } = require('../handlers/food');
 
 router.route('/')
-	.get(getAllFoods)
+	.get(queryFoods)
 	.post(addFood);
 
 router.route('/:id')
