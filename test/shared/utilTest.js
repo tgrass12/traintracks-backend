@@ -1,6 +1,6 @@
 const mocha = require('mocha');
 const expect = require('chai').expect;
-const util = require('../shared/util');
+const util = require('../../shared/util');
 
 
 let createDefaultObject = function() {

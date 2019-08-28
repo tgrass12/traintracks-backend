@@ -31,7 +31,7 @@ after(function(done) {
 });
 
 describe('User', function() {
-	beforeEach(function(done) {
+	afterEach(function(done) {
 	    mongoose.connection.collections.users.drop(() => {
 	        done();
     	});

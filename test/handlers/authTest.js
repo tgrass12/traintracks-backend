@@ -57,23 +57,34 @@ after(function(done) {
 });
 
 describe('authHandler', function() {
-	beforeEach(function(done) {
-		let initVals = init();
-		req = initVals.req;
-		res = initVals.res;
-		
+
+	before(function(done) {
 	    mongoose.connection.collections.users.drop(() => {
 	        done();
     	});
 	});
 
+	beforeEach(function() {
+		let initVals = init();
+		req = initVals.req;
+		res = initVals.res;
+
+	});
+
+	afterEach(function(done) {
+	    mongoose.connection.collections.users.drop(() => {
+	        done();
+		});
+	});
+
 	describe('#registerUser()', function() {
+
 		it('should register a new user', async function() {
 			req.body.username = 'test';
 			await registerUser(req, res, res.next);
 			console.log(res);
-			expect(res.statusReturned).to.equal(200)
+			expect(res.statusReturned).to.equal(200);
 			expect(res.jsonReturned).to.be.an('object');
-		})
+		});
 	});
-})
+});
