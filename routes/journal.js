@@ -9,6 +9,11 @@ const {
 	setWaterIntake
 } = require('../handlers/journal');
 
+const {
+	getWorkoutLog,
+	addExerciseToLog
+} = require('../handlers/workoutLog');
+
 const { 
 	preprocessFood,
 	handleJournalEntryUpdate,
@@ -24,6 +29,10 @@ router.route('/:date')
 	.get(getJournalEntry)
 	.post(preprocessFood, handleJournalEntryUpdate)
 	.delete(deleteJournalEntry);
+
+router.route('/:date/workouts')
+	.get(getWorkoutLog)
+	.post(addExerciseToLog);
 
 router.route('/:date/targets')
 	.patch(setJournalEntryTargets);
