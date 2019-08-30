@@ -8,7 +8,7 @@ module.exports.getWorkoutLog = async function(req, res, next) {
 	try {
 		let entry = await JournalEntry.findOne(
 			{ 'user': user.id, 'date': date }
-		).select('workouts');
+		).select('workouts').lean();
 
 		if (!entry) {
 			res.status(204);
