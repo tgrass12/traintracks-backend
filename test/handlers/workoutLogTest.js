@@ -61,11 +61,11 @@ after(function(done) {
 
 describe('workoutLogHandler', function() {
 	before(async function() {
-		let user = await mongoose.connection.collections.users.insertOne(
-			{'username': 'test'}
-		);
+		let userId = await mongoose.connection.collections.users.insertOne(
+			{ 'username': 'test' }
+		).insertedId;
 		await mongoose.connection.collections.journalentries.insertOne({
-			'user': user.insertedId,
+			'user': userId,
 			'date': '2019-07-04',
 			'workouts': {
 				'exercise': [{
@@ -78,9 +78,13 @@ describe('workoutLogHandler', function() {
 		});
 	});
 
-	beforeEach(function() {
+	beforeEach(async function() {
 		let initVals = init();
+		let user = await mongoose.connection.collections.users.findOne(
+			{ 'username': 'test' }
+		);
 		req = initVals.req;
+		req.user = user;
 		res = initVals.res;
 		next = initVals.next.bind(res);
 	});
@@ -110,7 +114,6 @@ describe('workoutLogHandler', function() {
 			};
 
 			let params = {
-				'username': 'test',
 				'date': '2019-07-02'
 			}
 

@@ -6,6 +6,12 @@ const {
 	getMeals
 } = require('../handlers/user');
 
+const {
+	findUser
+} = require('../middleware/user');
+
+router.param('username', findUser);
+
 router.route('/:username/targets')
 	.get(getTargets)
 	.patch(setTargets);

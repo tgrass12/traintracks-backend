@@ -3,10 +3,9 @@ const User = require('../models/User');
 const JournalEntry = require('../models/JournalEntry');
 
 module.exports.getWorkoutLog = async function(req, res, next) {
+	let { date } = req.params;
+	let user = req.user;		
 	try {
-		let { username, date } = req.params;
-		
-		let user = await User.findByUsername(username);
 		let entry = await JournalEntry.findOne(
 			{ 'user': user.id, 'date': date }
 		).select('workouts');
@@ -23,9 +22,10 @@ module.exports.getWorkoutLog = async function(req, res, next) {
 }
 
 module.exports.addExerciseToLog = async function(req, res, next) {
+	let { date } = req.params;
+	let user = req.user;
+
 	try {
-		let { username, date } = req.params;
-		let user = await User.findByUsername(username);
 		let { exerciseName, weight, sets, reps } = req.body;
 		let exercise = await LoggedExercise.create({
 			name: exerciseName,
@@ -33,7 +33,6 @@ module.exports.addExerciseToLog = async function(req, res, next) {
 			sets: sets,
 			reps: reps
 		});
-
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 'user': user.id, 'date': date },
 			{
@@ -41,7 +40,6 @@ module.exports.addExerciseToLog = async function(req, res, next) {
 			},
 			{ 'upsert': true, 'new': true }
 		).select('workouts');
-
 		res.json(entry);
 
 	} catch(err) {
