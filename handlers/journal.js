@@ -20,9 +20,12 @@ module.exports.getJournalEntry = async function(req, res, next) {
 				return {"name": m}
 			});
 			return res.json({
-				"meals": meals,
-				"targets": user.targets.diet,
-				"water": 0
+				"nutrition": {
+					"meals": meals,
+					"targets": user.targets.diet,
+					"water": 0,
+				},
+				"workouts": []
 			});
 		}
 
