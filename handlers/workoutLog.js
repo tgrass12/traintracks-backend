@@ -27,20 +27,23 @@ module.exports.addExerciseToLog = async function(req, res, next) {
 
 	try {
 		let { exerciseName, weight, sets, reps } = req.body;
+
 		let exercise = await LoggedExercise.create({
 			name: exerciseName,
 			weight: weight,
 			sets: sets,
 			reps: reps
 		});
+
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 'user': user.id, 'date': date },
 			{
 				$push: { 'workouts': exercise }
 			},
 			{ 'upsert': true, 'new': true }
-		).select('workouts').lean();
-		res.json(entry);
+		);
+
+		res.json(exercise);
 
 	} catch(err) {
 		next(err);
