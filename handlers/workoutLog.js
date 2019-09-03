@@ -36,10 +36,10 @@ module.exports.addExerciseToLog = async function(req, res, next) {
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 'user': user.id, 'date': date },
 			{
-				$push: { 'workouts.exercise': exercise }
+				$push: { 'workouts': exercise }
 			},
 			{ 'upsert': true, 'new': true }
-		).select('workouts');
+		).select('workouts').lean();
 		res.json(entry);
 
 	} catch(err) {
