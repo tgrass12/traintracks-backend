@@ -1,6 +1,6 @@
 const User = require('../models/User');
 
-module.exports.findUser = async function(req, res, next, id) {
+module.exports.findUser = async function(req, res, next) {
 	try {
 		let user = await User.findByUsername(req.params.username);
 		if (!user) {

@@ -1,6 +1,7 @@
 const router = require('express').Router({ mergeParams: true });
 const journalRoutes = require('./journal');
 const {
+	getUser,
 	getTargets,
 	setTargets,
 	getMeals
@@ -10,7 +11,8 @@ const {
 	findUser
 } = require('../middleware/user');
 
-router.param('username', findUser);
+router.route('/:username')
+	.get(getUser);
 
 router.route('/:username/targets')
 	.get(getTargets)
@@ -19,6 +21,6 @@ router.route('/:username/targets')
 router.route('/:username/meals')
 	.get(getMeals);
 
-router.use('/:username/journal', journalRoutes);
+router.use('/:username/journal', findUser, journalRoutes);
 
 module.exports = router;
