@@ -6,9 +6,36 @@ const Meal = require('../models/Meal');
 const ObjectId = require('mongoose').Types.ObjectId;
 const util = require('../shared/util');
 
+const createEntry = async function(user, date) {
+	let entry = await JournalEntry.create({ 
+		'user': user.id, 
+		'date': date,
+		'nutrition': {
+			'targets': user.targets.diet,
+			'meals': user.meals.map(m => { return { 'name': m } }),
+			'logged': {
+				'cals': 0,
+				'macros': {
+					'protein': 0,
+					'carbs': {
+						'total': 0
+					},
+					'fats': {
+						'total': 0
+					}
+				}
+			},
+			'water': 0	
+		}
+	});
+	await entry.save();
+	return entry;
+}
+
 module.exports.getJournalEntry = async function(req, res, next) {
 	let { date } = req.params;
 	let user = req.user;
+
 	try {
 
 		let entry = await JournalEntry.findOne({
@@ -30,6 +57,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 module.exports.getJournalEntryRange = async function(req, res, next) {
 	let { range, scope } = req.query;
 	let user = req.user;
+
 	try {
 		let range = util.getDateRange(scope);
 		let entries = await JournalEntry.find({
@@ -46,17 +74,13 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 module.exports.deleteJournalEntry = async function(req, res, next) {
 	let { date } = req.params;
 	let user = req.user;
+
 	try {
 		let entry = await JournalEntry.findOneAndDelete(
-			{'user': user.id, 'date': date}
+			{ 'user': user.id, 'date': date }
 		);
 
-		if (!entry) {
-			res.status(404);
-			return next(`No entry found for user ${user.username} on ${date}.`);
-		}
-
-		res.status(204).send();
+		res.sendStatus(204);
 	} catch(err) {
 		next(err);
 	}
@@ -67,25 +91,21 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 	let { meal } = req.query;
 	let { cals, macros, loggedFoodId } = req.body;
 	let user = req.user;
-	try {
-		userMeals = user.meals.map(m => {
-			return {'name': m}
-		});
-		
-		await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date},
-			{
-				$setOnInsert: 
-				{ 
-					'nutrition.targets': user.targets.diet,
-					'nutrition.meals': userMeals
-				}
-			},
-			{ 'upsert': true, 'setDefaultsOnInsert': true }
-		);
 
-		let entry = await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date, 'nutrition.meals.name': meal},
+	try {
+		let entry = await JournalEntry.findOne({ 'user': user.id, 'date': date });
+
+		if (!entry) {
+			entry = await createEntry(user, date);
+			res.status(201);
+		}
+
+		entry = await JournalEntry.findOneAndUpdate(
+			{
+				'user': user.id, 
+				'date': date,
+				'nutrition.meals.name': meal,
+			},
 			{
 				$inc: {
 					'nutrition.logged.cals': cals,
@@ -107,18 +127,14 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 					'nutrition.meals.$.total.macros.fats.sat': macros.fats.sat,
 					'nutrition.meals.$.total.macros.fats.poly': macros.fats.poly,
 					'nutrition.meals.$.total.macros.fats.mono': macros.fats.mono,
-					'nutrition.meals.$.total.macros.fats.trans': macros.fats.trans,
+					'nutrition.meals.$.total.macros.fats.trans': macros.fats.trans
 				},
 				$push: { 'nutrition.meals.$.foods': loggedFoodId }
 			},
-			{new: true, lean: true}
-		).select('nutrition').populate('nutrition.meals.foods').lean();
-		if (!entry) {
-			res.status(404);
-			return next(`No entry found for user ${user.username} on ${date}.`);
-		}
+			{ new: true }
+		).populate('nutrition.meals.foods').lean();
 
-		res.json(entry);
+		res.json(entry.nutrition);
 	} catch(err) {
 		next(err);
 	}
@@ -169,8 +185,8 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 				},
 				$pull: { 'nutrition.meals.$.foods': loggedFoodId }
 			},
-			{new: true}
-		);
+			{ 'new': true }
+		).populate('nutrition.meals.foods').lean();
 
 		await LoggedFood.findByIdAndDelete(loggedFoodId);
 		if (!entry) {
@@ -183,7 +199,7 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 				}
 			});
 		}
-		res.status(200).json(entry);
+		res.json(entry.nutrition);
 	}
 
 	catch(err) {
@@ -195,6 +211,7 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 	let { date } = req.params;
 	let user = req.user;
 	let targets = req.body;
+
 	try {
 		let entry = await JournalEntry.findOneAndUpdate(
 			{'user': user.id, 'date': date},
@@ -203,8 +220,8 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 					'nutrition.targets': targets
 				}
 			},
-			{new: true}
-		)
+			{ new: true }
+		).lean();
 		res.json(entry.targets);
 	} catch(err) {
 		next(err);
@@ -214,54 +231,21 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 module.exports.setWaterIntake = async function(req, res, next) {
 	let { date } = req.params;
 	let { waterAmount } = req.body;
-	let user = req.user;	
+	let user = req.user;
 
 	try {
-		userMeals = user.meals.map(m => {
-			return { 'name': m }
-		});
-		
-		//TODO: Handle default empty values better
-		await JournalEntry.findOneAndUpdate(
-			{ 'user': user.id, 'date': date },
-			{
-				$setOnInsert: {
-					'nutrition': {
-						'targets': user.targets.diet,
-						'meals': userMeals,
-						"logged": {
-							'cals': 0,
-							'macros': {
-								'protein': 0,
-								'carbs': {
-									'total': 0
-								},
-								'fats': {
-									'total': 0
-								}
-							}
-						},
-					}
-				}
-			},
-			{ 'upsert': true, 'setDefaultsOnInsert': true }
-		);
 
-		let entry = await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date},
-			{
-				$inc: {
-					'nutrition.water': waterAmount
-				}
-			},
-			{new: true}
-		).select('nutrition.water');
+		let entry = await JournalEntry.findOne({ 'user': user.id, 'date': date });
 
 		if (!entry) {
-			res.status(404);
-			return next(`No journal found for ${user.username} on '${date}'`);
+			entry = await createEntry(user, date);
+			res.status(201);
 		}
-		res.json(entry);
+
+		entry.nutrition.water += waterAmount;
+		await entry.save();
+
+		res.send(entry.nutrition);
 	} catch(err) {
 		next(err);
 	}
@@ -269,7 +253,8 @@ module.exports.setWaterIntake = async function(req, res, next) {
 
 module.exports.getWaterIntake = async function(req, res, next) {
 	let { date } = req.params;
-	let { user } = req.user;
+	let user = req.user;
+
 	try {
 		let entry = await JournalEntry.findOne({
 			'user': user.id, 'date': date
@@ -280,7 +265,7 @@ module.exports.getWaterIntake = async function(req, res, next) {
 			return next(`No journal found for ${user.username} on '${date}'`);
 		}
 
-		res.json(entry);
+		res.json(entry.nutrition);
 	} catch(err) {
 		next(err);
 	}

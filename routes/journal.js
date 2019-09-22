@@ -39,6 +39,6 @@ router.route('/:date/targets')
 
 router.route('/:date/water')
 	.get(getWaterIntake)
-	.patch(setWaterIntake);
+	.post(setWaterIntake);
 
 module.exports = router;
