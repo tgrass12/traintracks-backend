@@ -63,7 +63,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 		let entries = await JournalEntry.find({
 			'user': user.id,
 			'date': { $gte: range.start, $lte: range.end }
-		}).select('date nutrition.logged').lean();
+		}).select('date nutrition workouts').lean();
 
 		res.json(entries);
 	} catch(err) {
