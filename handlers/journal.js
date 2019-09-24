@@ -8,7 +8,7 @@ const util = require('../shared/util');
 
 const createEntry = async function(user, date) {
 	let entry = await JournalEntry.create({ 
-		'user': user.id, 
+		'user': user._id, 
 		'date': date,
 		'nutrition': {
 			'targets': user.targets.diet,
@@ -39,7 +39,7 @@ module.exports.getJournalEntry = async function(req, res, next) {
 	try {
 
 		let entry = await JournalEntry.findOne({
-			'user': user.id, 'date': date
+			'user': user._id, 'date': date
 		}).populate('nutrition.meals.foods').lean();
 
 		if (!entry) {
@@ -61,7 +61,7 @@ module.exports.getJournalEntryRange = async function(req, res, next) {
 	try {
 		let range = util.getDateRange(scope);
 		let entries = await JournalEntry.find({
-			'user': user.id,
+			'user': user._id,
 			'date': { $gte: range.start, $lte: range.end }
 		}).select('date nutrition workouts').lean();
 
@@ -77,7 +77,7 @@ module.exports.deleteJournalEntry = async function(req, res, next) {
 
 	try {
 		let entry = await JournalEntry.findOneAndDelete(
-			{ 'user': user.id, 'date': date }
+			{ 'user': user._id, 'date': date }
 		);
 
 		res.sendStatus(204);
@@ -93,7 +93,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 	let user = req.user;
 
 	try {
-		let entry = await JournalEntry.findOne({ 'user': user.id, 'date': date });
+		let entry = await JournalEntry.findOne({ 'user': user._id, 'date': date });
 
 		if (!entry) {
 			entry = await createEntry(user, date);
@@ -102,7 +102,7 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 
 		entry = await JournalEntry.findOneAndUpdate(
 			{
-				'user': user.id, 
+				'user': user._id, 
 				'date': date,
 				'nutrition.meals.name': meal,
 			},
@@ -133,7 +133,6 @@ module.exports.addFoodToJournal = async function(req, res, next) {
 			},
 			{ new: true }
 		).populate('nutrition.meals.foods').lean();
-
 		res.json(entry.nutrition);
 	} catch(err) {
 		next(err);
@@ -155,7 +154,7 @@ module.exports.removeFoodFromJournal = async function(req, res, next) {
 		let { cals, macros } = loggedFood.food;
 		let entry = await JournalEntry.findOneAndUpdate(
 			{ 
-				'user': user.id, 
+				'user': user._id, 
 				'date': date,
 				'nutrition.meals.name': meal,
 				'nutrition.meals.foods': loggedFoodId 
@@ -214,7 +213,7 @@ module.exports.setJournalEntryTargets = async function(req, res, next) {
 
 	try {
 		let entry = await JournalEntry.findOneAndUpdate(
-			{'user': user.id, 'date': date},
+			{'user': user._id, 'date': date},
 			{
 				$set: {
 					'nutrition.targets': targets
@@ -235,7 +234,7 @@ module.exports.setWaterIntake = async function(req, res, next) {
 
 	try {
 
-		let entry = await JournalEntry.findOne({ 'user': user.id, 'date': date });
+		let entry = await JournalEntry.findOne({ 'user': user._id, 'date': date });
 
 		if (!entry) {
 			entry = await createEntry(user, date);
@@ -257,7 +256,7 @@ module.exports.getWaterIntake = async function(req, res, next) {
 
 	try {
 		let entry = await JournalEntry.findOne({
-			'user': user.id, 'date': date
+			'user': user._id, 'date': date
 		}).select('nutrition.water -_id').lean();
 
 		if (!entry) {
