@@ -1,13 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-const PORT = 4000;
+const PORT = process.env.PORT;
 
 const apiRoutes = require('./routes');
 const {errorHandler} = require('./handlers/errorHandler');
 
 //TODO: What if mongoose doesn't connect?
-mongoose.connect('mongodb://localhost:27017/traintrax', 
+mongoose.connect(process.env.DB_HOST, 
 	{ 
 		useFindAndModify: false,
 		useNewUrlParser: true,
