@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Nutrients = require('./Nutrients');
+const passportLocalMongoose = require('passport-local-mongoose');
 
 const userSchema = new mongoose.Schema({
 	username: {
@@ -7,6 +8,7 @@ const userSchema = new mongoose.Schema({
 		required: true,
 		unique: true
 	},
+	email: String,
 	name: String,
 	targets: {
 		diet: {
@@ -14,12 +16,20 @@ const userSchema = new mongoose.Schema({
 			default: Nutrients.schema
 		}
 	},
-	meals: ['Breakfast', 'Lunch', 'Dinner']
+	meals: {
+		type: [String],
+		default: ['Breakfast', 'Lunch', 'Dinner']
+	}
 });
 
-userSchema.static('findByUsername', function(username) {
-	return this.findOne({ 'username': username });
-})
+userSchema.plugin(passportLocalMongoose);
+
+userSchema.methods.toJSON = function() {
+	let obj = this.toObject();
+	delete obj.hash;
+	delete obj.salt;
+	return obj;
+}
 
 const User = mongoose.model('user', userSchema);
 

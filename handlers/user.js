@@ -2,6 +2,7 @@ const User = require('../models/User');
 
 module.exports.getUser = async function(req, res, next) {
 	let { username } = req.params;
+
 	try {
 		let user = await User.findOne(
 			{ 'username': username }
@@ -29,7 +30,6 @@ module.exports.getTargets = async function(req, res, next) {
 			res.status(404);
 			return next(`No user found with username ${username}`);
 		}
-
 		res.json(targets);
 	} catch(err) {
 		next(err);
