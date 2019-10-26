@@ -1,5 +1,33 @@
 const User = require('../models/User');
 
+
+module.exports.initNewUser = async function(req, res, next) {
+	const { username } = req.params;
+	const { nutrients, sex } = req.body;
+
+	try {
+		let user = await User.findOneAndUpdate(
+			{ 'username': username },
+			{
+				$set: {
+					'targets.diet': nutrients,
+					'sex': sex,
+				}
+			},
+			{ lean: true, new: true, select: '-__v' }
+		);
+
+		if (!user) {
+			res.status(404);
+			return next(`No user found with username ${username}`);
+		}
+
+		res.json(user);
+	} catch(err) {
+		next(err);
+	}
+}
+
 module.exports.getUser = async function(req, res, next) {
 	let { username } = req.params;
 

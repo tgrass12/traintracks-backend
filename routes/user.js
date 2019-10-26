@@ -1,6 +1,7 @@
 const router = require('express').Router({ mergeParams: true });
 const journalRoutes = require('./journal');
 const {
+  initNewUser,
 	getUser,
 	getTargets,
 	setTargets,
@@ -13,6 +14,9 @@ const {
 
 router.route('/:username')
 	.get(getUser);
+
+router.route('/:username/init')
+  .patch(initNewUser);
 
 router.route('/:username/targets')
 	.get(getTargets)

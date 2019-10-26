@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
 	},
 	email: String,
 	name: String,
+	sex: String,
 	targets: {
 		diet: {
 			type: Nutrients.schema,
