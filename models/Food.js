@@ -1,27 +1,18 @@
 const mongoose = require('mongoose');
-const Macros = require('./Macros');
-const Micros = require('./Micros');
+const Nutrients = require('./Nutrients');
 
 const foodSchema = new mongoose.Schema({
 	name: {
 		type: String,
-		required: true
+		required: true,
+		text: true
 	},
-	cals: {
-		type: Number,
-		required: true
-	},
-	macros: {
-		type: Macros.schema,
-		default: Macros.schema
-	},
-	micros: {
-		type: Micros.schema,
-		default: Macros.schema
+	nutrients: {
+		type: Nutrients.schema,
+		default: Nutrients.schema,
+		required: true,
 	}
 });
-
-foodSchema.index({ 'name':  'text' });
 
 const Food = mongoose.model('food', foodSchema);
 

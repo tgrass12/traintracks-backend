@@ -5,7 +5,7 @@ module.exports.findUser = async function(req, res, next) {
 		let user = await User.findByUsername(req.params.username).lean();
 		if (!user) {
 			res.status(404);
-			return next(`No user found with username ${username}`);
+			return next(`No user found with username ${req.params.username}`);
 		}
 
 		req.user = user;

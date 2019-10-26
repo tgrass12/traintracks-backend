@@ -38,14 +38,12 @@ module.exports.queryFoods = async function(req, res, next) {
 
 /* Add a new food to the Foods collection */
 module.exports.addFood = async function(req, res, next) {
-	let {name, cals, macros, micros} = req.body;
+	let {name, nutrients} = req.body;
 	
 	try {
 		let newFood = await Food.create({
-			'name': name,
-			'cals': cals,
-			'macros': macros,
-			'micros': micros
+			name,
+			nutrients
 		});
 		res.json(newFood);
 	}

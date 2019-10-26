@@ -47,8 +47,7 @@ module.exports.preprocessFood = async function(req, res, next) {
 				food: foundFood
 			});
 
-			req.body.cals = loggedFood.food.cals;
-			req.body.macros = loggedFood.food.macros;
+			req.body.nutrients = loggedFood.food.nutrients;
 			req.body.loggedFoodId = loggedFood._id;
 			next();
 		} catch(err) {
