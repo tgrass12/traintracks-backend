@@ -2,8 +2,8 @@ const User = require('../models/User');
 
 module.exports.register = async function(req, res, next) {
 	try {
-		const { username, password } = req.body;
-		const newUser = new User({ username: username });
+		const { username, email, password } = req.body;
+		const newUser = new User({ username, email });
 		const user = await User.register(newUser, password);
 
 		req.session.user = username;
@@ -22,7 +22,7 @@ module.exports.login = async function(req, res, next) {
 			res.status(401);
 			return next('Username or password is invalid.');
 		}
-		
+
 		const authResult = await userToLogin.authenticate(password);
 
 		if (!authResult.user) {
