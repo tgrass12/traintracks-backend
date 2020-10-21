@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/index.js",
-    "test": "mocha --recursive -R spec --exit"
+    "test": "mocha --recursive -R spec --exit",
+    "lint": "npx eslint ."
   },
   "author": "Tyler Grass",
   "license": "ISC",
@@ -33,6 +34,11 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.3.0",
-    "mocha": "^6.2.1"
+    "eslint": "^7.11.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-prettier": "^6.13.0",
+    "eslint-plugin-import": "^2.22.1",
+    "mocha": "^6.2.1",
+    "prettier": "2.1.2"
   }
 }

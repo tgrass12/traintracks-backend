@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const Nutrients = require('./Nutrients');
 
 const mealSchema = new mongoose.Schema({
-	name: {
-		type: String,
-		default: 'Lunch'
-	},
-	foods: [{ type: mongoose.Schema.Types.ObjectId, ref:'loggedfood'}],
-	total: Nutrients.schema
+  name: {
+    type: String,
+    default: 'Lunch',
+  },
+  foods: [{ type: mongoose.Schema.Types.ObjectId, ref: 'loggedfood' }],
+  total: Nutrients.schema,
 });
 
 const Meal = mongoose.model('meal', mealSchema);

@@ -1,5 +1,5 @@
-//TODO: Update when user auth implemented
-async function updateWaterConsumptionForDate(parent, args, ctx, info) {
+// TODO: Update when user auth implemented
+async function updateWaterConsumptionForDate(parent, args, ctx) {
   const { username, date, waterConsumed } = args;
 
   const user = await ctx.prisma.user.findOne({
@@ -21,7 +21,7 @@ async function updateWaterConsumptionForDate(parent, args, ctx, info) {
   });
 
   if (!journalEntry) {
-    return await ctx.prisma.nutritionLog.create({
+    return ctx.prisma.nutritionLog.create({
       data: {
         waterConsumed,
         journalEntry: {
@@ -33,24 +33,24 @@ async function updateWaterConsumptionForDate(parent, args, ctx, info) {
               },
             },
             create: {
-                user: { connect: { id: userId }},
-                entryDate: date
+              user: { connect: { id: userId } },
+              entryDate: date,
             },
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
-  return await ctx.prisma.nutritionLog.upsert({
+  return ctx.prisma.nutritionLog.upsert({
     where: {
       journalId: journalEntry.id,
     },
-    update: { waterConsumed: { increment: waterConsumed }},
+    update: { waterConsumed: { increment: waterConsumed } },
     create: { waterConsumed },
   });
 }
 
 module.exports = {
   updateWaterConsumptionForDate,
-}
+};

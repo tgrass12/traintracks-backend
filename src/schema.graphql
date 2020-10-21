@@ -6,8 +6,8 @@ type Query {
 
 type Mutation {
   updateWaterConsumptionForDate(
-    username: String!,
-    date: Date!,
+    username: String!
+    date: Date!
     waterConsumed: Int!
   ): NutritionLog!
 }

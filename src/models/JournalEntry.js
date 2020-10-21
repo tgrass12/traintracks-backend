@@ -4,10 +4,10 @@ const NutritionJournal = require('./NutritionJournal');
 const LoggedExercise = require('./LoggedExercise');
 
 const journalEntrySchema = new mongoose.Schema({
-	user: { type: mongoose.Schema.Types.ObjectId, ref: 'user'},
-	date: String,
-	nutrition: NutritionJournal.schema,
-	workouts: [LoggedExercise.schema]
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+  date: String,
+  nutrition: NutritionJournal.schema,
+  workouts: [LoggedExercise.schema],
 });
 
 const JournalEntry = mongoose.model('journalentry', journalEntrySchema);
