@@ -10,7 +10,7 @@ const PORT = process.env.PORT;
 
 const User = require('./models/User');
 
-const resolvers = require('./src/resolvers');
+const resolvers = require('./resolvers');
 const apiRoutes = require('./routes');
 const {errorHandler} = require('./handlers/errorHandler');
 
@@ -25,13 +25,13 @@ const graphqlServer = new GraphQLServer({
 });
 
 //TODO: What if mongoose doesn't connect?
-mongoose.connect(process.env.DB_HOST,
-	{
-		useFindAndModify: false,
-		useNewUrlParser: true,
-		useCreateIndex: true
-	}
-);
+// mongoose.connect(process.env.DB_HOST,
+// 	{
+// 		useFindAndModify: false,
+// 		useNewUrlParser: true,
+// 		useCreateIndex: true
+// 	}
+// );
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
