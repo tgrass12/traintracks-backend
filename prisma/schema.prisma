@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  experimentalFeatures = ["connectOrCreate", "atomicNumberOperations"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["connectOrCreate", "atomicNumberOperations"]
 }
 
 datasource db {
@@ -9,33 +9,84 @@ datasource db {
 }
 
 model JournalEntry {
-  id           Int            @id @default(autoincrement())
-  userId       String         @map("user_id")
-  entryDate    DateTime       @map("entry_date")
-  user         User           @relation(fields: [userId], references: [id])
+  id           Int           @id @default(autoincrement())
+  userId       String        @map("user_id")
+  entryDate    DateTime      @map("entry_date")
+  user         User          @relation(fields: [userId], references: [id])
   nutritionLog NutritionLog?
 
-  @@unique([userId, entryDate], name: "userJournalDateUnique")
+  @@unique([userId, entryDate], name: "userEntryDateUnique")
   @@map("journal_entry")
 }
 
 model User {
-  id             String          @id @default(dbgenerated())
-  createdAt      DateTime        @map("created_at") @default(now())
-  username       String          @unique
-  fullName       String?         @map("full_name")
-  email          String          @unique
+  id             String         @id @default(dbgenerated())
+  username       String         @unique
+  fullName       String?        @map("full_name")
+  email          String         @unique
   password       String
+  createdAt      DateTime       @default(now()) @map("created_at")
   journalEntries JournalEntry[]
 
   @@map("users")
 }
 
 model NutritionLog {
-  id            Int           @id @default(autoincrement())
-  journalId     Int           @map("journal_id") @unique @default(autoincrement())
-  waterConsumed Int           @map("water_consumed") @default(0)
-  journalEntry  JournalEntry  @relation(fields: [journalId], references: [id])
+  id            Int          @id @default(autoincrement())
+  journalId     Int          @unique @default(autoincrement()) @map("journal_id")
+  waterConsumed Int          @default(0) @map("water_consumed")
+  journalEntry  JournalEntry @relation(fields: [journalId], references: [id])
+  logMeal       LogMeal[]    @relation("log_mealTonutrition_log")
 
   @@map("nutrition_log")
+}
+
+model Food {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  foodNutrientAmount FoodNutrientAmount[]
+  log_food           LogFood[]            @relation("foodTolog_food")
+
+  @@map("food")
+}
+
+model FoodNutrientAmount {
+  foodId         Int          @default(autoincrement()) @map("food_id")
+  nutrientInfoId Int          @default(autoincrement()) @map("nutrient_info_id")
+  amount         Float        @default(0)
+  food           Food         @relation(fields: [foodId], references: [id])
+  nutrientInfo   NutrientInfo @relation(fields: [nutrientInfoId], references: [id])
+
+  @@id([foodId, nutrientInfoId])
+  @@map("food_nutrient_amount")
+}
+
+model LogFood {
+  id        Int     @id @default(autoincrement())
+  logMealId Int     @default(autoincrement()) @map("log_meal_id")
+  foodId    Int     @default(autoincrement()) @map("food_id")
+  quantity  Float   @default(0)
+  food      Food    @relation("foodTolog_food", fields: [foodId], references: [id])
+  logMeal   LogMeal @relation(fields: [logMealId], references: [id])
+
+  @@map("log_food")
+}
+
+model LogMeal {
+  id             Int          @id @default(autoincrement())
+  mealTimeName   String       @map("meal_time_name")
+  nutritionLogId Int          @default(autoincrement()) @map("nutrition_log_id")
+  nutritionLog   NutritionLog @relation("log_mealTonutrition_log", fields: [nutritionLogId], references: [id])
+  logFood        LogFood[]
+
+  @@map("log_meal")
+}
+
+model NutrientInfo {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique
+  unit               String
+  foodNutrientAmount FoodNutrientAmount[]
+
+  @@map("nutrient_info")
 }

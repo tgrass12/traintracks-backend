@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS food (
+  id SERIAL PRIMARY KEY,
+  name varchar(64) NOT NULL
+);

@@ -12,7 +12,7 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
   const { id: userId } = user;
   const journalEntry = await ctx.prisma.journalEntry.findOne({
     where: {
-      userJournalDateUnique: {
+      userEntryDateUnique: {
         userId,
         entryDate: date,
       },
