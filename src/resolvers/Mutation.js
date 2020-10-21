@@ -1,0 +1,56 @@
+//TODO: Update when user auth implemented
+async function updateWaterConsumptionForDate(parent, args, ctx, info) {
+  const { username, date, waterConsumed } = args;
+
+  const user = await ctx.prisma.user.findOne({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (!user) throw new Error(`User ${username} doesn't exist`);
+
+  const { id: userId } = user;
+  const journalEntry = await ctx.prisma.journalEntry.findOne({
+    where: {
+      userJournalDateUnique: {
+        userId,
+        entryDate: date,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (!journalEntry) {
+    return await ctx.prisma.nutritionLog.create({
+      data: {
+        waterConsumed,
+        journalEntry: {
+          connectOrCreate: {
+            where: {
+              userJournalDateUnique: {
+                userId,
+                entryDate: date,
+              },
+            },
+            create: {
+                user: { connect: { id: userId }},
+                entryDate: date
+            },
+          }
+        }
+      }
+    });
+  }
+
+  return await ctx.prisma.nutritionLog.upsert({
+    where: {
+      journalId: journalEntry.id,
+    },
+    update: { waterConsumed: { increment: waterConsumed }},
+    create: { waterConsumed },
+  });
+}
+
+module.exports = {
+  updateWaterConsumptionForDate,
+}

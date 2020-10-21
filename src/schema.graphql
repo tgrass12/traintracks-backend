@@ -4,6 +4,14 @@ type Query {
   user(username: String!): User!
 }
 
+type Mutation {
+  updateWaterConsumptionForDate(
+    username: String!,
+    date: Date!,
+    waterConsumed: Int!
+  ): NutritionLog!
+}
+
 type User {
   username: String!
   fullName: String
@@ -12,7 +20,7 @@ type User {
 }
 
 type JournalEntry {
-  date: Date!
+  entryDate: Date!
   nutrition: NutritionLog
 }
 

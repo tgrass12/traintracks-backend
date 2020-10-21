@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  experimentalFeatures = ["connectOrCreate", "atomicNumberOperations"]
 }
 
 datasource db {
@@ -11,21 +12,21 @@ model JournalEntry {
   id           Int            @id @default(autoincrement())
   userId       String         @map("user_id")
   entryDate    DateTime       @map("entry_date")
-  users        User           @relation(fields: [userId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
   nutritionLog NutritionLog?
 
-  @@unique([userId, entryDate], name: "user_entry_date_unique")
+  @@unique([userId, entryDate], name: "userJournalDateUnique")
   @@map("journal_entry")
 }
 
 model User {
-  id           String          @id @default(dbgenerated())
-  createdAt    DateTime        @map("created_at") @default(now())
-  username     String          @unique
-  fullName     String?         @map("full_name")
-  email        String          @unique
-  password     String
-  journalEntry JournalEntry[]
+  id             String          @id @default(dbgenerated())
+  createdAt      DateTime        @map("created_at") @default(now())
+  username       String          @unique
+  fullName       String?         @map("full_name")
+  email          String          @unique
+  password       String
+  journalEntries JournalEntry[]
 
   @@map("users")
 }
