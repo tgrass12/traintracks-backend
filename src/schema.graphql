@@ -1,0 +1,21 @@
+scalar Date
+
+type Query {
+  user(username: String!): User!
+}
+
+type User {
+  username: String!
+  fullName: String
+  email: String!
+  journalEntries: [JournalEntry!]!
+}
+
+type JournalEntry {
+  date: Date!
+  nutrition: NutritionLog
+}
+
+type NutritionLog {
+  waterConsumed: Int!
+}

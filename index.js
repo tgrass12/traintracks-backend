@@ -1,4 +1,6 @@
 require('dotenv').config();
+const { GraphQLServer } = require('graphql-yoga');
+const { PrismaClient } = require('@prisma/client');
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
@@ -8,12 +10,23 @@ const PORT = process.env.PORT;
 
 const User = require('./models/User');
 
+const resolvers = require('./src/resolvers');
 const apiRoutes = require('./routes');
 const {errorHandler} = require('./handlers/errorHandler');
 
+const prisma = new PrismaClient();
+
+const graphqlServer = new GraphQLServer({
+	typeDefs: './src/schema.graphql',
+	resolvers,
+	context: {
+		prisma
+	}
+});
+
 //TODO: What if mongoose doesn't connect?
-mongoose.connect(process.env.DB_HOST, 
-	{ 
+mongoose.connect(process.env.DB_HOST,
+	{
 		useFindAndModify: false,
 		useNewUrlParser: true,
 		useCreateIndex: true
@@ -45,5 +58,11 @@ app.use(errorHandler);
 app.listen(PORT, () => {
 	console.log(`Now listening on port ${PORT}`);
 });
+
+const graphqlOpts = { port: 4000 };
+graphqlServer.start(
+	graphqlOpts,
+	() => console.log(`GraphQL Server started at http://localhost:4000`)
+);
 
 module.exports = app;
