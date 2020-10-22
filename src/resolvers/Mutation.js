@@ -1,3 +1,59 @@
+const bcrypt = require('bcrypt');
+const { AuthenticationError, ForbiddenError } = require('apollo-server-errors');
+
+async function signup(parent, args, ctx) {
+  const existingUser = await ctx.prisma.user.findOne({
+    where: { username: args.username },
+  });
+
+  if (existingUser) {
+    throw new ForbiddenError(
+      `User with username '${args.username}' already exists`,
+    );
+  }
+  const password = await bcrypt.hash(args.password, 10);
+  const user = await ctx.prisma.user.create({
+    data: {
+      ...args,
+      password,
+    },
+  });
+
+  ctx.request.session.userId = user.id;
+  ctx.request.session.username = user.username;
+  return user;
+}
+
+async function login(parent, args, ctx) {
+  const user = await ctx.prisma.user.findOne({
+    where: { username: args.username },
+  });
+
+  if (!user) {
+    throw new AuthenticationError(`Error Authenticating ${args.username}`);
+  }
+
+  const isValid = await bcrypt.compare(args.password, user.password);
+
+  if (!isValid) {
+    throw new AuthenticationError(`Error Authenticating ${args.username}`);
+  }
+
+  ctx.request.session.userId = user.id;
+  ctx.request.session.username = user.username;
+
+  return user;
+}
+
+function logout(parent, args, ctx) {
+  const { username } = ctx.request.session;
+  if (ctx.request.session) {
+    ctx.request.session.destroy();
+  }
+
+  return username || '';
+}
+
 // TODO: Update when user auth implemented
 async function updateWaterConsumptionForDate(parent, args, ctx) {
   const { username, date, waterConsumed } = args;
@@ -52,5 +108,8 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
 }
 
 module.exports = {
+  signup,
+  login,
+  logout,
   updateWaterConsumptionForDate,
 };

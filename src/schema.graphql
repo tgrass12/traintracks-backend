@@ -5,6 +5,9 @@ type Query {
 }
 
 type Mutation {
+  signup(email: String!, password: String!, username: String!): User!
+  login(username: String!, password: String!): User!
+  logout: String!
   updateWaterConsumptionForDate(
     username: String!
     date: Date!
