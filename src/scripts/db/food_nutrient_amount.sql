@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS food_nutrient_amount (
   food_id SERIAL NOT NULL,
   nutrient_info_id SERIAL NOT NULL,
-  amount NUMERIC NOT NULL DEFAULT 0 CHECK (amount >= 0),
+  amount INT NOT NULL DEFAULT 0 CHECK (amount >= 0),
   CONSTRAINT fk_food
     FOREIGN KEY (food_id)
     REFERENCES food(id)

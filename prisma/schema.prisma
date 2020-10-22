@@ -20,24 +20,26 @@ model JournalEntry {
 }
 
 model User {
-  id             String         @id @default(dbgenerated())
-  username       String         @unique
-  email          String         @unique
-  password       String
-  createdAt      DateTime       @default(now()) @map("created_at")
-  firstName      String?        @map("first_name")
-  lastName       String?        @map("last_name")
-  journalEntries JournalEntry[]
+  id                  String               @id @default(dbgenerated())
+  username            String               @unique
+  email               String               @unique
+  password            String
+  createdAt           DateTime             @default(now()) @map("created_at")
+  firstName           String?              @map("first_name")
+  lastName            String?              @map("last_name")
+  journalEntries      JournalEntry[]
+  userNutrientTargets UserNutrientTarget[] @relation("user_nutrient_targetTousers")
 
   @@map("users")
 }
 
 model NutritionLog {
-  id            Int          @id @default(autoincrement())
-  journalId     Int          @unique @default(autoincrement()) @map("journal_id")
-  waterConsumed Int          @default(0) @map("water_consumed")
-  journalEntry  JournalEntry @relation(fields: [journalId], references: [id])
-  logMeal       LogMeal[]    @relation("log_mealTonutrition_log")
+  id                          Int                          @id @default(autoincrement())
+  journalId                   Int                          @unique @default(autoincrement()) @map("journal_id")
+  waterConsumed               Int                          @default(0) @map("water_consumed")
+  journalEntry                JournalEntry                 @relation(fields: [journalId], references: [id])
+  logMeals                    LogMeal[]                    @relation("log_mealTonutrition_log")
+  nutritionLogNutrientTargets NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
 
   @@map("nutrition_log")
 }
@@ -54,7 +56,7 @@ model Food {
 model FoodNutrientAmount {
   foodId         Int          @default(autoincrement()) @map("food_id")
   nutrientInfoId Int          @default(autoincrement()) @map("nutrient_info_id")
-  amount         Float        @default(0)
+  amount         Int          @default(0)
   food           Food         @relation(fields: [foodId], references: [id])
   nutrientInfo   NutrientInfo @relation(fields: [nutrientInfoId], references: [id])
 
@@ -84,10 +86,34 @@ model LogMeal {
 }
 
 model NutrientInfo {
-  id                 Int                  @id @default(autoincrement())
-  name               String               @unique
-  unit               String
-  foodNutrientAmount FoodNutrientAmount[]
+  id                          Int                          @id @default(autoincrement())
+  name                        String                       @unique
+  unit                        String
+  foodNutrientAmounts         FoodNutrientAmount[]
+  NutritionLogNutrientTargets NutritionLogNutrientTarget[] @relation("nutrient_infoTonutrition_log_nutrient_target")
+  userNutrientTargets         UserNutrientTarget[]         @relation("nutrient_infoTouser_nutrient_target")
 
   @@map("nutrient_info")
+}
+
+model UserNutrientTarget {
+  userId       String       @map("user_id")
+  nutrientId   Int          @default(autoincrement()) @map("nutrient_id")
+  amount       Int          @default(0)
+  nutrientInfo NutrientInfo @relation("nutrient_infoTouser_nutrient_target", fields: [nutrientId], references: [id])
+  users        User         @relation("user_nutrient_targetTousers", fields: [userId], references: [id])
+
+  @@id([userId, nutrientId])
+  @@map("user_nutrient_target")
+}
+
+model NutritionLogNutrientTarget {
+  nutritionLogId Int          @default(autoincrement()) @map("nutrition_log_id")
+  nutrientId     Int          @default(autoincrement()) @map("nutrient_id")
+  amount         Int          @default(0)
+  nutrientInfo   NutrientInfo @relation("nutrient_infoTonutrition_log_nutrient_target", fields: [nutrientId], references: [id])
+  nutritionLog   NutritionLog @relation("nutrition_logTonutrition_log_nutrient_target", fields: [nutritionLogId], references: [id])
+
+  @@id([nutritionLogId, nutrientId])
+  @@map("nutrition_log_nutrient_target")
 }
