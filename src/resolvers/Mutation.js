@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const { AuthenticationError, ForbiddenError } = require('apollo-server-errors');
+const { startCase, isUserAuthenticated } = require('../shared/util');
 
 async function signup(parent, args, ctx) {
   const existingUser = await ctx.prisma.user.findOne({
@@ -107,9 +108,52 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
   });
 }
 
+async function addFood(parent, args, ctx) {
+  if (!isUserAuthenticated(ctx)) {
+    throw new AuthenticationError('User not authenticated');
+  }
+
+  const nutrientAmountsPartials = args.food.nutrients.map((nutrient) => {
+    return {
+      amount: nutrient.amount,
+      nutrientInfo: {
+        connect: { name: startCase(nutrient.name) },
+      },
+    };
+  });
+
+  const food = await ctx.prisma.food.create({
+    data: {
+      name: args.food.name,
+      foodNutrientAmounts: {
+        create: nutrientAmountsPartials,
+      },
+    },
+    include: {
+      foodNutrientAmounts: {
+        include: {
+          nutrientInfo: true,
+        },
+      },
+    },
+  });
+
+  return {
+    name: food.name,
+    nutrients: food.foodNutrientAmounts.map((nutrient) => {
+      return {
+        name: nutrient.nutrientInfo.name,
+        amount: nutrient.amount,
+        unit: nutrient.nutrientInfo.unit,
+      };
+    }),
+  };
+}
+
 module.exports = {
   signup,
   login,
   logout,
+  addFood,
   updateWaterConsumptionForDate,
 };

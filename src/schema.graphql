@@ -2,6 +2,7 @@ scalar Date
 
 type Query {
   user(username: String!): User!
+  getFoodById(id: ID!): Food!
 }
 
 type Mutation {
@@ -13,9 +14,11 @@ type Mutation {
     date: Date!
     waterConsumed: Int!
   ): NutritionLog!
+  addFood(food: FoodInput!): Food!
 }
 
 type User {
+  id: ID!
   username: String!
   fullName: String
   email: String!
@@ -23,10 +26,35 @@ type User {
 }
 
 type JournalEntry {
+  id: ID!
   entryDate: Date!
   nutrition: NutritionLog
 }
 
 type NutritionLog {
+  id: ID!
   waterConsumed: Int!
+}
+
+type Food {
+  id: ID!
+  name: String!
+  nutrients: [Nutrient!]!
+}
+
+type Nutrient {
+  id: ID!
+  name: String!
+  amount: Int!
+  unit: String!
+}
+
+input FoodInput {
+  name: String!
+  nutrients: [NutrientInput!]!
+}
+
+input NutrientInput {
+  name: String!
+  amount: Int!
 }
