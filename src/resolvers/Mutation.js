@@ -3,6 +3,7 @@ const {
   AuthenticationError,
   ForbiddenError,
   ApolloError,
+  UserInputError,
 } = require('apollo-server-errors');
 const { startCase, isUserAuthenticated } = require('../shared/util');
 const { PrismaUniqueConstraintError } = require('../shared/constants');
@@ -164,6 +165,12 @@ async function logFoodForDate(parent, args, ctx) {
     foodId,
     servings,
   } = args;
+
+  const food = await ctx.prisma.food.findOne({ where: { id: Number(foodId) } });
+
+  if (!food) {
+    throw new UserInputError(`Food with id ${foodId} not found`);
+  }
 
   const logFoodCreatePartial = {
     create: {
