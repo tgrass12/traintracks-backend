@@ -1,15 +1,38 @@
 const bcrypt = require('bcrypt');
-const { AuthenticationError, ForbiddenError } = require('apollo-server-errors');
+const {
+  AuthenticationError,
+  ForbiddenError,
+  ApolloError,
+} = require('apollo-server-errors');
 const { startCase, isUserAuthenticated } = require('../shared/util');
+const { PrismaUniqueConstraintError } = require('../shared/constants');
 
 async function signup(parent, args, ctx) {
   const password = await bcrypt.hash(args.password, 10);
-  const user = await ctx.prisma.user.create({
-    data: {
-      ...args,
-      password,
-    },
-  });
+  try {
+    const user = await ctx.prisma.user.create({
+      data: {
+        ...args,
+        password,
+      },
+    });
+  } catch (e) {
+    const {
+      code,
+      meta: { target },
+    } = e;
+    if (code === PrismaUniqueConstraintError) {
+      if (target[0] === 'email') {
+        throw new ApolloError('Email is already taken', 'USER_EXISTS');
+      }
+      [];
+      if (target[0] === 'username') {
+        throw new ApolloError('Username is already taken', 'USER_EXISTS');
+      }
+    }
+
+    throw e;
+  }
 
   ctx.request.session.userId = user.id;
   ctx.request.session.username = user.username;
