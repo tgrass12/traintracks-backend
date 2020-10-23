@@ -5,12 +5,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const session = require('express-session');
+const pg = require('pg');
+const pgSession = require('connect-pg-simple')(session);
 const User = require('./models/User');
 const apiRoutes = require('./routes');
 const resolvers = require('./resolvers');
 const { errorHandler } = require('./handlers/errorHandler');
-
-const { PORT, DB_HOST, APP_SECRET } = process.env;
+const {
+	PORT,
+	DB_USER,
+	DB_PASSWORD,
+	DB_HOST,
+	DB_PORT,
+	DB_NAME,
+	APP_SECRET,
+} = process.env;
 const app = express();
 
 const prisma = new PrismaClient();
@@ -62,13 +71,25 @@ app.use('/api', apiRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-	console.log(`Now listening on port ${PORT}`);
+app.listen(3500, () => {
+	console.log(`Now listening on port ${3500}`);
 });
 
-const graphqlOpts = { port: 4000 };
+const graphqlOptions = { port: PORT };
+const dbConnection = {
+	user: DB_USER,
+	password: DB_PASSWORD,
+	host: DB_HOST,
+	port: DB_PORT,
+	database: DB_NAME,
+};
+
 graphqlServer.express.use(
 	session({
+		store: new pgSession({
+			pool: new pg.Pool(dbConnection),
+			tableName: 'user_session',
+		}),
 		cookie: {
 			httpOnly: false,
 			maxAge: 1000 * 60 * 60 * 24 * 30, // Every 30 days
@@ -78,7 +99,7 @@ graphqlServer.express.use(
 		saveUninitialized: false,
 	}),
 );
-graphqlServer.start(graphqlOpts, () =>
+graphqlServer.start(graphqlOptions, () =>
 	console.log(`GraphQL Server started at http://localhost:4000`),
 );
 
