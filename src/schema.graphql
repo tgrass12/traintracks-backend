@@ -9,7 +9,7 @@ type Mutation {
   signup(email: String!, password: String!, username: String!): User!
   login(username: String!, password: String!): User!
   logout: String!
-  updateWaterConsumptionForDate(date: Date!, waterConsumed: Int!): NutritionLog!
+  updateWaterIntakeForDate(date: Date!, intakeAmount: Int!): NutritionLog!
   addFood(food: FoodInput!): Food!
   logFoodForDate(
     date: Date!
@@ -35,7 +35,7 @@ type JournalEntry {
 
 type NutritionLog {
   id: ID!
-  waterConsumed: Int!
+  waterIntake: Int!
   mealOccasions: [MealOccasion!]!
 }
 

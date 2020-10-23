@@ -16,6 +16,10 @@ async function signup(parent, args, ctx) {
         password,
       },
     });
+
+    ctx.request.session.userId = user.id;
+    ctx.request.session.username = user.username;
+    return user;
   } catch (e) {
     const {
       code,
@@ -33,10 +37,6 @@ async function signup(parent, args, ctx) {
 
     throw e;
   }
-
-  ctx.request.session.userId = user.id;
-  ctx.request.session.username = user.username;
-  return user;
 }
 
 async function login(parent, args, ctx) {
@@ -69,12 +69,12 @@ function logout(parent, args, ctx) {
   return username || '';
 }
 
-async function updateWaterConsumptionForDate(parent, args, ctx) {
+async function updateWaterIntakeForDate(parent, args, ctx) {
   if (!isUserAuthenticated(ctx)) {
     throw new AuthenticationError('User not authenticated');
   }
 
-  const { date: entryDate, waterConsumed } = args;
+  const { date: entryDate, intakeAmount: waterIntake } = args;
   const { userId } = ctx.request.session;
   const journalEntry = await ctx.prisma.journalEntry.findOne({
     where: {
@@ -89,7 +89,7 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
   if (!journalEntry) {
     return ctx.prisma.nutritionLog.create({
       data: {
-        waterConsumed,
+        waterIntake,
         journalEntry: {
           connectOrCreate: {
             where: {
@@ -112,8 +112,11 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
     where: {
       journalEntryId: journalEntry.id,
     },
-    update: { waterConsumed: { increment: waterConsumed } },
-    create: { waterConsumed },
+    update: { waterIntake },
+    create: {
+      waterIntake,
+      journalEntry: { connect: { id: journalEntry.id } },
+    },
   });
 }
 
@@ -147,16 +150,7 @@ async function addFood(parent, args, ctx) {
     },
   });
 
-  return {
-    name: food.name,
-    nutrients: food.foodNutrientAmounts.map((nutrient) => {
-      return {
-        name: nutrient.nutrientInfo.name,
-        amount: nutrient.amount,
-        unit: nutrient.nutrientInfo.unit,
-      };
-    }),
-  };
+  return food;
 }
 
 async function logFoodForDate(parent, args, ctx) {
@@ -228,13 +222,25 @@ async function logFoodForDate(parent, args, ctx) {
 
   const { id: nutritionLogId, mealOccasions } = journalEntry.nutritionLog;
 
-  const { id: mealOccasionId } = mealOccasions.find(
+  const mealOccasionToUpdate = mealOccasions.find(
     (occasion) => occasion.name === occasionName,
   );
 
+  const mealOccasionId = mealOccasionToUpdate ? mealOccasionToUpdate.id : -1;
+
   const updatedMealOccasion = await ctx.prisma.logMealOccasion.upsert({
     where: { id: mealOccasionId },
-    create: mealOccasionsCreatePartial.create,
+    create: {
+      ...mealOccasionsCreatePartial.create,
+      nutritionLog: {
+        connectOrCreate: {
+          where: { id: nutritionLogId },
+          create: {
+            journalEntry: { connect: { id: journalEntry.id } },
+          },
+        },
+      },
+    },
     update: {
       foods: logFoodCreatePartial,
     },
@@ -248,6 +254,6 @@ module.exports = {
   login,
   logout,
   addFood,
-  updateWaterConsumptionForDate,
+  updateWaterIntakeForDate,
   logFoodForDate,
 };
