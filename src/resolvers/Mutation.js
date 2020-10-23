@@ -3,15 +3,6 @@ const { AuthenticationError, ForbiddenError } = require('apollo-server-errors');
 const { startCase, isUserAuthenticated } = require('../shared/util');
 
 async function signup(parent, args, ctx) {
-  const existingUser = await ctx.prisma.user.findOne({
-    where: { username: args.username },
-  });
-
-  if (existingUser) {
-    throw new ForbiddenError(
-      `User with username '${args.username}' already exists`,
-    );
-  }
   const password = await bcrypt.hash(args.password, 10);
   const user = await ctx.prisma.user.create({
     data: {
@@ -55,23 +46,18 @@ function logout(parent, args, ctx) {
   return username || '';
 }
 
-// TODO: Update when user auth implemented
 async function updateWaterConsumptionForDate(parent, args, ctx) {
-  const { username, date, waterConsumed } = args;
+  if (!isUserAuthenticated(ctx)) {
+    throw new AuthenticationError('User not authenticated');
+  }
 
-  const user = await ctx.prisma.user.findOne({
-    where: { username },
-    select: { id: true },
-  });
-
-  if (!user) throw new Error(`User ${username} doesn't exist`);
-
-  const { id: userId } = user;
+  const { date: entryDate, waterConsumed } = args;
+  const { userId } = ctx.request.session;
   const journalEntry = await ctx.prisma.journalEntry.findOne({
     where: {
       userEntryDateUnique: {
         userId,
-        entryDate: date,
+        entryDate,
       },
     },
     select: { id: true },
@@ -84,14 +70,14 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
         journalEntry: {
           connectOrCreate: {
             where: {
-              userJournalDateUnique: {
+              userEntryDateUnique: {
                 userId,
-                entryDate: date,
+                entryDate,
               },
             },
             create: {
               user: { connect: { id: userId } },
-              entryDate: date,
+              entryDate,
             },
           },
         },
