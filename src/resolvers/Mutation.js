@@ -110,7 +110,7 @@ async function updateWaterConsumptionForDate(parent, args, ctx) {
 
   return ctx.prisma.nutritionLog.upsert({
     where: {
-      journalId: journalEntry.id,
+      journalEntryId: journalEntry.id,
     },
     update: { waterConsumed: { increment: waterConsumed } },
     create: { waterConsumed },

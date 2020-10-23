@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS nutrition_log_nutrient_target (
-  nutrition_log_id SERIAL NOT NULL,
-  nutrient_id SERIAL NOT NULL,
+  nutrition_log_id INT NOT NULL,
+  nutrient_id INT NOT NULL,
   amount INT NOT NULL DEFAULT 0,
   PRIMARY KEY(nutrition_log_id, nutrient_id),
   CONSTRAINT fk_nutrition_log

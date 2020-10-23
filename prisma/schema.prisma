@@ -13,7 +13,7 @@ model JournalEntry {
   userId       String        @map("user_id")
   entryDate    DateTime      @map("entry_date")
   user         User          @relation(fields: [userId], references: [id])
-  nutritionLog NutritionLog?
+  nutritionLog NutritionLog? @relation("journal_entryTonutrition_log")
 
   @@unique([userId, entryDate], name: "userEntryDateUnique")
   @@map("journal_entry")
@@ -21,10 +21,10 @@ model JournalEntry {
 
 model User {
   id                  String               @id @default(dbgenerated())
+  createdAt           DateTime             @default(now()) @map("created_at")
   username            String               @unique
   email               String               @unique
   password            String
-  createdAt           DateTime             @default(now()) @map("created_at")
   firstName           String?              @map("first_name")
   lastName            String?              @map("last_name")
   journalEntries      JournalEntry[]
@@ -35,9 +35,9 @@ model User {
 
 model NutritionLog {
   id                          Int                          @id @default(autoincrement())
-  journalId                   Int                          @unique @default(autoincrement()) @map("journal_id")
-  waterConsumed               Int                          @default(0) @map("water_consumed")
-  journalEntry                JournalEntry                 @relation(fields: [journalId], references: [id])
+  journalEntryId              Int                          @unique @map("journal_entry_id")
+  waterIntake                 Int                          @default(0) @map("water_intake")
+  journalEntry                JournalEntry                 @relation("journal_entryTonutrition_log", fields: [journalEntryId], references: [id])
   mealOccasions               LogMealOccasion[]            @relation("log_meal_occasionTonutrition_log")
   nutritionLogNutrientTargets NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
 
@@ -54,8 +54,8 @@ model Food {
 }
 
 model FoodNutrientAmount {
-  foodId         Int          @default(autoincrement()) @map("food_id")
-  nutrientInfoId Int          @default(autoincrement()) @map("nutrient_info_id")
+  foodId         Int          @map("food_id")
+  nutrientInfoId Int          @map("nutrient_info_id")
   amount         Int          @default(0)
   food           Food         @relation(fields: [foodId], references: [id])
   nutrientInfo   NutrientInfo @relation(fields: [nutrientInfoId], references: [id])
@@ -66,8 +66,8 @@ model FoodNutrientAmount {
 
 model LogFood {
   id                Int             @id @default(autoincrement())
-  logMealOccasionId Int             @default(autoincrement()) @map("log_meal_occasion_id")
-  foodId            Int             @default(autoincrement()) @map("food_id")
+  logMealOccasionId Int             @map("log_meal_occasion_id")
+  foodId            Int             @map("food_id")
   servings          Float           @default(0)
   food              Food            @relation("foodTolog_food", fields: [foodId], references: [id])
   logMealOccasion   LogMealOccasion @relation("log_foodTolog_meal_occasion", fields: [logMealOccasionId], references: [id])
@@ -88,7 +88,7 @@ model NutrientInfo {
 
 model UserNutrientTarget {
   userId       String       @map("user_id")
-  nutrientId   Int          @default(autoincrement()) @map("nutrient_id")
+  nutrientId   Int          @map("nutrient_id")
   amount       Int          @default(0)
   nutrientInfo NutrientInfo @relation("nutrient_infoTouser_nutrient_target", fields: [nutrientId], references: [id])
   users        User         @relation("user_nutrient_targetTousers", fields: [userId], references: [id])
@@ -98,8 +98,8 @@ model UserNutrientTarget {
 }
 
 model NutritionLogNutrientTarget {
-  nutritionLogId Int          @default(autoincrement()) @map("nutrition_log_id")
-  nutrientId     Int          @default(autoincrement()) @map("nutrient_id")
+  nutritionLogId Int          @map("nutrition_log_id")
+  nutrientId     Int          @map("nutrient_id")
   amount         Int          @default(0)
   nutrientInfo   NutrientInfo @relation("nutrient_infoTonutrition_log_nutrient_target", fields: [nutrientId], references: [id])
   nutritionLog   NutritionLog @relation("nutrition_logTonutrition_log_nutrient_target", fields: [nutritionLogId], references: [id])
@@ -120,7 +120,7 @@ model UserSession {
 model LogMealOccasion {
   id             Int          @id @default(autoincrement())
   name           String       @map("occasion_name")
-  nutritionLogId Int          @default(autoincrement()) @map("nutrition_log_id")
+  nutritionLogId Int          @map("nutrition_log_id")
   nutritionLog   NutritionLog @relation("log_meal_occasionTonutrition_log", fields: [nutritionLogId], references: [id])
   foods          LogFood[]    @relation("log_foodTolog_meal_occasion")
 
