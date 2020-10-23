@@ -3,6 +3,7 @@ scalar Date
 type Query {
   user(username: String!): User!
   getFoodById(id: ID!): Food!
+  getJournalByUsernameAndDate(username: String!, date: Date!): JournalEntry
 }
 
 type Mutation {
