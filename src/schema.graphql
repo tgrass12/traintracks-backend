@@ -11,6 +11,12 @@ type Mutation {
   logout: String!
   updateWaterConsumptionForDate(date: Date!, waterConsumed: Int!): NutritionLog!
   addFood(food: FoodInput!): Food!
+  logFoodForDate(
+    date: Date!
+    mealOccasion: String!
+    foodId: ID!
+    servings: Float!
+  ): NutritionLog!
 }
 
 type User {
@@ -30,6 +36,20 @@ type JournalEntry {
 type NutritionLog {
   id: ID!
   waterConsumed: Int!
+  mealOccasions: [MealOccasion!]!
+}
+
+type MealOccasion {
+  id: ID!
+  name: String!
+  foods: [LoggedFood!]!
+}
+
+type LoggedFood {
+  id: ID!
+  name: String!
+  servings: Float!
+  nutrients: [Nutrient!]!
 }
 
 type Food {

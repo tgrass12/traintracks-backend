@@ -159,10 +159,95 @@ async function addFood(parent, args, ctx) {
   };
 }
 
+async function logFoodForDate(parent, args, ctx) {
+  if (!isUserAuthenticated(ctx)) {
+    throw new AuthenticationError('User not authenticated');
+  }
+
+  const {
+    mealOccasion: occasionName,
+    date: entryDate,
+    foodId,
+    servings,
+  } = args;
+
+  const logFoodCreatePartial = {
+    create: {
+      servings,
+      food: {
+        connect: { id: Number(foodId) },
+      },
+    },
+  };
+
+  const mealOccasionsCreatePartial = {
+    create: {
+      name: occasionName,
+      foods: logFoodCreatePartial,
+    },
+  };
+
+  const { userId } = ctx.request.session;
+  const journalEntry = await ctx.prisma.journalEntry.findOne({
+    where: {
+      userEntryDateUnique: {
+        userId,
+        entryDate,
+      },
+    },
+    include: {
+      nutritionLog: {
+        include: {
+          mealOccasions: true,
+        },
+      },
+    },
+  });
+
+  if (!journalEntry) {
+    return await ctx.prisma.nutritionLog.create({
+      data: {
+        mealOccasions: mealOccasionsCreatePartial,
+        journalEntry: {
+          connectOrCreate: {
+            where: {
+              userEntryDateUnique: {
+                userId,
+                entryDate,
+              },
+            },
+            create: {
+              user: { connect: { id: userId } },
+              entryDate,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  const { id: nutritionLogId, mealOccasions } = journalEntry.nutritionLog;
+
+  const { id: mealOccasionId } = mealOccasions.find(
+    (occasion) => occasion.name === occasionName,
+  );
+
+  const updatedMealOccasion = await ctx.prisma.logMealOccasion.upsert({
+    where: { id: mealOccasionId },
+    create: mealOccasionsCreatePartial.create,
+    update: {
+      foods: logFoodCreatePartial,
+    },
+  });
+
+  return ctx.prisma.nutritionLog.findOne({ where: { id: nutritionLogId } });
+}
+
 module.exports = {
   signup,
   login,
   logout,
   addFood,
   updateWaterConsumptionForDate,
+  logFoodForDate,
 };

@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS log_food (
   id SERIAL PRIMARY KEY,
-  log_meal_id SERIAL NOT NULL,
+  log_meal_occasion_id SERIAL NOT NULL,
   food_id SERIAL NOT NULL,
-  quantity NUMERIC NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-  CONSTRAINT fk_log_meal
-    FOREIGN KEY(log_meal_id)
-    REFERENCES log_meal(id)
+  servings NUMERIC NOT NULL DEFAULT 0 CHECK (servings >= 0),
+  CONSTRAINT fk_log_meal_occasion
+    FOREIGN KEY(log_meal_occasion_id)
+    REFERENCES log_meal_occasion(id)
     ON DELETE CASCADE,
   CONSTRAINT fk_food
     FOREIGN KEY(food_id)
