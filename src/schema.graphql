@@ -18,6 +18,7 @@ type Mutation {
     foodId: ID!
     servings: Float!
   ): NutritionLog!
+  removeFoodFromLoggedMealForDate(logFoodId: ID!): NutritionLog!
 }
 
 type User {

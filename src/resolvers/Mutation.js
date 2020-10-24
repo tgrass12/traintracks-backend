@@ -256,6 +256,68 @@ async function logFoodForDate(parent, args, ctx) {
   return ctx.prisma.nutritionLog.findOne({ where: { id: nutritionLogId } });
 }
 
+async function removeFoodFromLoggedMealForDate(parent, args, ctx) {
+  if (!isUserAuthenticated(ctx)) {
+    throw new AuthenticationError('User not authenticated');
+  }
+
+  const { userId } = ctx.request.session;
+  const { logFoodId } = args;
+  const loggedFoodExists = !!(await ctx.prisma.logFood.findOne({
+    where: {
+      id: Number(logFoodId),
+    },
+  }));
+
+  if (!loggedFoodExists) {
+    throw new UserInputError(`Logged food with id ${logFoodId} does not exist`);
+  }
+
+  const loggedFood = await ctx.prisma.logFood.findOne({
+    where: {
+      id: Number(logFoodId),
+    },
+    include: {
+      logMealOccasion: {
+        include: {
+          nutritionLog: {
+            include: {
+              journalEntry: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const {
+    id: loggedFoodOwner,
+  } = loggedFood.logMealOccasion.nutritionLog.journalEntry.user;
+
+  if (loggedFoodOwner !== userId) {
+    throw new ForbiddenError(
+      `User ${userId} not authorized to delete ${logFoodId}`,
+    );
+  }
+
+  const deletedLoggedFood = await ctx.prisma.logFood.delete({
+    where: { id: Number(logFoodId) },
+    include: {
+      logMealOccasion: {
+        include: {
+          nutritionLog: true,
+        },
+      },
+    },
+  });
+
+  return deletedLoggedFood.logMealOccasion.nutritionLog;
+}
+
 module.exports = {
   signup,
   login,
@@ -263,4 +325,5 @@ module.exports = {
   addFood,
   updateWaterIntakeForDate,
   logFoodForDate,
+  removeFoodFromLoggedMealForDate,
 };
