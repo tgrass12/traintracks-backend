@@ -17,9 +17,10 @@ async function nutrients(parent, args, ctx) {
     },
   });
 
-  return foodNutrientAmounts.map(({ amount, nutrientInfo: { name, unit } }) => {
+  return foodNutrientAmounts.map(({ amount, nutrientInfo }) => {
+    const { name: nutrientName, unit } = nutrientInfo;
     return {
-      name,
+      name: nutrientName,
       amount: Math.round(amount * servings),
       unit,
     };
@@ -27,14 +28,12 @@ async function nutrients(parent, args, ctx) {
 }
 
 async function name(parent, args, ctx) {
-  const {
-    food: { name },
-  } = await ctx.prisma.logFood.findOne({
+  const loggedFood = await ctx.prisma.logFood.findOne({
     where: { id: parent.id },
     include: { food: true },
   });
 
-  return name;
+  return loggedFood.food.name;
 }
 
 module.exports = {

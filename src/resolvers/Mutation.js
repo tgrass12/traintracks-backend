@@ -30,7 +30,6 @@ async function signup(parent, args, ctx) {
       if (target[0] === 'email') {
         throw new ApolloError('Email is already taken', 'USER_EXISTS');
       }
-      [];
       if (target[0] === 'username') {
         throw new ApolloError('Username is already taken', 'USER_EXISTS');
       }
@@ -206,7 +205,7 @@ async function logFoodForDate(parent, args, ctx) {
   });
 
   if (!journalEntry) {
-    return await ctx.prisma.nutritionLog.create({
+    return ctx.prisma.nutritionLog.create({
       data: {
         mealOccasions: mealOccasionsCreatePartial,
         journalEntry: {
@@ -251,9 +250,12 @@ async function logFoodForDate(parent, args, ctx) {
     update: {
       foods: logFoodCreatePartial,
     },
+    include: {
+      nutritionLog: true,
+    },
   });
 
-  return ctx.prisma.nutritionLog.findOne({ where: { id: nutritionLogId } });
+  return updatedMealOccasion.nutritionLog;
 }
 
 async function removeFoodFromLoggedMealForDate(parent, args, ctx) {
