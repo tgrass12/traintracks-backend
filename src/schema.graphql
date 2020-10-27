@@ -7,9 +7,9 @@ type Query {
 }
 
 type Mutation {
-  signup(email: String!, password: String!, username: String!): User!
-  login(username: String!, password: String!): User!
-  logout: String!
+  authenticateUser: AuthPayload
+  signup(email: String!, password: String!, username: String!): AuthPayload
+  login(username: String!, password: String!): AuthPayload
   updateWaterIntakeForDate(date: Date!, intakeAmount: Int!): NutritionLog!
   addFood(food: FoodInput!): Food!
   logFoodForDate(
@@ -65,6 +65,10 @@ type Nutrient {
   name: String!
   amount: Int!
   unit: String!
+}
+
+type AuthPayload {
+  user: User
 }
 
 input FoodInput {

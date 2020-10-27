@@ -1,12 +1,30 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const {
   AuthenticationError,
   ForbiddenError,
   ApolloError,
   UserInputError,
 } = require('apollo-server-errors');
-const { startCase, isUserAuthenticated } = require('../shared/util');
+const {
+  startCase,
+  createAuthCookie,
+  getAuthenticatedUserId,
+  checkUserAuthenticated,
+} = require('../shared/util');
 const { PrismaUniqueConstraintError } = require('../shared/constants');
+
+const { AUTH_SECRET } = process.env;
+
+async function authenticateUser(parent, args, ctx) {
+  const userId = getAuthenticatedUserId(ctx);
+  const user = await ctx.prisma.user.findOne({ where: { id: userId } });
+  const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+  createAuthCookie(token, ctx);
+  return {
+    user,
+  };
+}
 
 async function signup(parent, args, ctx) {
   const password = await bcrypt.hash(args.password, 10);
@@ -18,9 +36,11 @@ async function signup(parent, args, ctx) {
       },
     });
 
-    ctx.request.session.userId = user.id;
-    ctx.request.session.username = user.username;
-    return user;
+    const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+    createAuthCookie(token, ctx);
+    return {
+      user,
+    };
   } catch (e) {
     const {
       code,
@@ -54,28 +74,16 @@ async function login(parent, args, ctx) {
     throw new AuthenticationError(`Error Authenticating ${args.username}`);
   }
 
-  ctx.request.session.userId = user.id;
-  ctx.request.session.username = user.username;
-
-  return user;
-}
-
-function logout(parent, args, ctx) {
-  const { username } = ctx.request.session;
-  if (ctx.request.session) {
-    ctx.request.session.destroy();
-  }
-
-  return username || '';
+  const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+  createAuthCookie(token, ctx);
+  return {
+    user,
+  };
 }
 
 async function updateWaterIntakeForDate(parent, args, ctx) {
-  if (!isUserAuthenticated(ctx)) {
-    throw new AuthenticationError('User not authenticated');
-  }
-
+  const userId = getAuthenticatedUserId(ctx);
   const { date: entryDate, intakeAmount: waterIntake } = args;
-  const { userId } = ctx.request.session;
   const journalEntry = await ctx.prisma.journalEntry.findOne({
     where: {
       userEntryDateUnique: {
@@ -121,9 +129,7 @@ async function updateWaterIntakeForDate(parent, args, ctx) {
 }
 
 async function addFood(parent, args, ctx) {
-  if (!isUserAuthenticated(ctx)) {
-    throw new AuthenticationError('User not authenticated');
-  }
+  checkUserAuthenticated(ctx);
 
   const nutrientAmountsPartials = args.food.nutrients.map((nutrient) => {
     return {
@@ -154,10 +160,7 @@ async function addFood(parent, args, ctx) {
 }
 
 async function logFoodForDate(parent, args, ctx) {
-  if (!isUserAuthenticated(ctx)) {
-    throw new AuthenticationError('User not authenticated');
-  }
-
+  const userId = getAuthenticatedUserId(ctx);
   const {
     mealOccasion: occasionName,
     date: entryDate,
@@ -187,7 +190,6 @@ async function logFoodForDate(parent, args, ctx) {
     },
   };
 
-  const { userId } = ctx.request.session;
   const journalEntry = await ctx.prisma.journalEntry.findOne({
     where: {
       userEntryDateUnique: {
@@ -259,11 +261,7 @@ async function logFoodForDate(parent, args, ctx) {
 }
 
 async function removeFoodFromLoggedMealForDate(parent, args, ctx) {
-  if (!isUserAuthenticated(ctx)) {
-    throw new AuthenticationError('User not authenticated');
-  }
-
-  const { userId } = ctx.request.session;
+  const userId = getAuthenticatedUserId(ctx);
   const { logFoodId } = args;
   const loggedFoodExists = !!(await ctx.prisma.logFood.findOne({
     where: {
@@ -321,9 +319,9 @@ async function removeFoodFromLoggedMealForDate(parent, args, ctx) {
 }
 
 module.exports = {
+  authenticateUser,
   signup,
   login,
-  logout,
   addFood,
   updateWaterIntakeForDate,
   logFoodForDate,

@@ -108,15 +108,6 @@ model NutritionLogNutrientTarget {
   @@map("nutrition_log_nutrient_target")
 }
 
-model UserSession {
-  sid    String   @id
-  sess   Json
-  expire DateTime
-
-  @@index([expire], name: "IDX_session_expire")
-  @@map("user_session")
-}
-
 model LogMealOccasion {
   id             Int          @id @default(autoincrement())
   name           String       @map("occasion_name")
