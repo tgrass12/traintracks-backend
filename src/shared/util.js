@@ -37,9 +37,14 @@ function createAuthCookie(token, ctx) {
   return ctx.request.res.cookie('at', token, options);
 }
 
+function destroyAuthCookie(ctx) {
+  return ctx.request.res.cookie('at', { maxAge: 0 });
+}
+
 module.exports = {
   startCase,
   createAuthCookie,
+  destroyAuthCookie,
   getAuthenticatedUserId,
   checkUserAuthenticated,
 };

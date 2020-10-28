@@ -9,6 +9,7 @@ const {
 const {
   startCase,
   createAuthCookie,
+  destroyAuthCookie,
   getAuthenticatedUserId,
   checkUserAuthenticated,
 } = require('../shared/util');
@@ -17,13 +18,17 @@ const { PrismaUniqueConstraintError } = require('../shared/constants');
 const { AUTH_SECRET } = process.env;
 
 async function authenticateUser(parent, args, ctx) {
-  const userId = getAuthenticatedUserId(ctx);
-  const user = await ctx.prisma.user.findOne({ where: { id: userId } });
-  const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
-  createAuthCookie(token, ctx);
-  return {
-    user,
-  };
+  try {
+    const userId = getAuthenticatedUserId(ctx);
+    const user = await ctx.prisma.user.findOne({ where: { id: userId } });
+    const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+    createAuthCookie(token, ctx);
+    return {
+      user,
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 async function signup(parent, args, ctx) {
@@ -79,6 +84,12 @@ async function login(parent, args, ctx) {
   return {
     user,
   };
+}
+
+function logout(parent, args, ctx) {
+  console.log('logging out');
+  destroyAuthCookie(ctx);
+  return null;
 }
 
 async function updateWaterIntakeForDate(parent, args, ctx) {
@@ -322,6 +333,7 @@ module.exports = {
   authenticateUser,
   signup,
   login,
+  logout,
   addFood,
   updateWaterIntakeForDate,
   logFoodForDate,

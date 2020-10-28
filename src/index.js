@@ -24,7 +24,12 @@ const graphqlServer = new GraphQLServer({
   },
 });
 
-const graphqlOptions = { port: PORT };
+const cors = {
+  credentials: true,
+  origin: 'http://localhost:3000',
+};
+
+const graphqlOptions = { port: PORT, cors };
 graphqlServer.express.use(cookieParser());
 graphqlServer.start(graphqlOptions, () =>
   console.log(`GraphQL Server started at http://localhost:4000`),
