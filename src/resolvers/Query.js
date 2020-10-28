@@ -1,3 +1,5 @@
+const { getAuthenticatedUserId } = require('../shared/util');
+
 function user(parent, args, ctx) {
   return ctx.prisma.user.findOne({ where: { username: args.username } });
 }
@@ -21,8 +23,35 @@ async function getJournalByUsernameAndDate(parent, args, ctx) {
   });
 }
 
+function getCurrentUserJournalEntryByDate(parent, args, ctx) {
+  const userId = getAuthenticatedUserId(ctx);
+  return ctx.prisma.journalEntry.findOne({
+    where: {
+      userEntryDateUnique: {
+        userId,
+        entryDate: args.date,
+      },
+    },
+  });
+}
+
+function getJournalEntryRange(parent, args, ctx) {
+  const userId = getAuthenticatedUserId(ctx);
+  const where = {
+    userId,
+    entryDate: {
+      gte: args.startDate,
+      lte: args.endDate,
+    },
+  };
+
+  return ctx.prisma.journalEntry.findMany({ where });
+}
+
 module.exports = {
   user,
   getFoodById,
   getJournalByUsernameAndDate,
+  getCurrentUserJournalEntryByDate,
+  getJournalEntryRange,
 };

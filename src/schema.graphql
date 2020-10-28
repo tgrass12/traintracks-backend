@@ -4,6 +4,8 @@ type Query {
   user(username: String!): User!
   getFoodById(id: ID!): Food!
   getJournalByUsernameAndDate(username: String!, date: Date!): JournalEntry
+  getCurrentUserJournalEntryByDate(date: Date!): JournalEntry
+  getJournalEntryRange(startDate: Date!, endDate: Date!): [JournalEntry!]!
 }
 
 type Mutation {
