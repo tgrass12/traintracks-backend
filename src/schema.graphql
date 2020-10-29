@@ -48,14 +48,13 @@ type NutritionLog {
 type MealOccasion {
   id: ID!
   name: String!
-  foods: [LoggedFood!]!
+  loggedFoods: [LoggedFood!]!
 }
 
 type LoggedFood {
   id: ID!
-  name: String!
   servings: Float!
-  nutrients: [Nutrient!]!
+  food: Food!
 }
 
 type Food {
