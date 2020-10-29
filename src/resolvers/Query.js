@@ -48,10 +48,28 @@ function getJournalEntryRange(parent, args, ctx) {
   return ctx.prisma.journalEntry.findMany({ where });
 }
 
+async function getCurrentUserNutritionLogByDate(parent, args, ctx) {
+  const userId = getAuthenticatedUserId(ctx);
+  const journal = await ctx.prisma.journalEntry.findOne({
+    where: {
+      userEntryDateUnique: {
+        userId,
+        entryDate: args.date,
+      },
+    },
+    include: {
+      nutritionLog: true,
+    },
+  });
+
+  return journal ? journal.nutritionLog : null;
+}
+
 module.exports = {
   user,
   getFoodById,
   getJournalByUsernameAndDate,
   getCurrentUserJournalEntryByDate,
+  getCurrentUserNutritionLogByDate,
   getJournalEntryRange,
 };

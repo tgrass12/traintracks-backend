@@ -5,6 +5,7 @@ type Query {
   getFoodById(id: ID!): Food!
   getJournalByUsernameAndDate(username: String!, date: Date!): JournalEntry
   getCurrentUserJournalEntryByDate(date: Date!): JournalEntry
+  getCurrentUserNutritionLogByDate(date: Date!): NutritionLog
   getJournalEntryRange(startDate: Date!, endDate: Date!): [JournalEntry!]!
 }
 
