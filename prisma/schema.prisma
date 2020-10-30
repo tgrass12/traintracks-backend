@@ -20,15 +20,15 @@ model JournalEntry {
 }
 
 model User {
-  id                  String               @id @default(dbgenerated())
-  createdAt           DateTime             @default(now()) @map("created_at")
-  username            String               @unique
-  email               String               @unique
-  password            String
-  firstName           String?              @map("first_name")
-  lastName            String?              @map("last_name")
-  journalEntries      JournalEntry[]
-  userNutrientTargets UserNutrientTarget[] @relation("user_nutrient_targetTousers")
+  id             String         @id @default(dbgenerated())
+  createdAt      DateTime       @default(now()) @map("created_at")
+  username       String         @unique
+  email          String         @unique
+  password       String
+  firstName      String?        @map("first_name")
+  lastName       String?        @map("last_name")
+  journalEntries JournalEntry[]
+  targets        UserTarget[]   @relation("user_targetTousers")
 
   @@map("users")
 }
@@ -81,20 +81,8 @@ model NutrientInfo {
   unit                        String
   foodNutrientAmounts         FoodNutrientAmount[]
   NutritionLogNutrientTargets NutritionLogNutrientTarget[] @relation("nutrient_infoTonutrition_log_nutrient_target")
-  userNutrientTargets         UserNutrientTarget[]         @relation("nutrient_infoTouser_nutrient_target")
 
   @@map("nutrient_info")
-}
-
-model UserNutrientTarget {
-  userId       String       @map("user_id")
-  nutrientId   Int          @map("nutrient_id")
-  amount       Int          @default(0)
-  nutrientInfo NutrientInfo @relation("nutrient_infoTouser_nutrient_target", fields: [nutrientId], references: [id])
-  users        User         @relation("user_nutrient_targetTousers", fields: [userId], references: [id])
-
-  @@id([userId, nutrientId])
-  @@map("user_nutrient_target")
 }
 
 model NutritionLogNutrientTarget {
@@ -116,4 +104,15 @@ model LogMealOccasion {
   foods          LogFood[]    @relation("log_foodTolog_meal_occasion")
 
   @@map("log_meal_occasion")
+}
+
+model UserTarget {
+  id           Int    @id @default(autoincrement())
+  userId       String @map("user_id")
+  targetType   String @map("target_type")
+  amount       Int
+  targetInfoId Int    @map("target_info_id")
+  user         User   @relation("user_targetTousers", fields: [userId], references: [id])
+
+  @@map("user_target")
 }
