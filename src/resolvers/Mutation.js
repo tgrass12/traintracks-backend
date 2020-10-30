@@ -21,7 +21,10 @@ async function authenticateUser(parent, args, ctx) {
   try {
     const userId = getAuthenticatedUserId(ctx);
     const user = await ctx.prisma.user.findOne({ where: { id: userId } });
-    const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+    const token = jwt.sign(
+      { userId: user.id, username: user.username },
+      AUTH_SECRET,
+    );
     createAuthCookie(token, ctx);
     return {
       user,
@@ -41,7 +44,10 @@ async function signup(parent, args, ctx) {
       },
     });
 
-    const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+    const token = jwt.sign(
+      { userId: user.id, username: args.username },
+      AUTH_SECRET,
+    );
     createAuthCookie(token, ctx);
     return {
       user,
@@ -79,7 +85,10 @@ async function login(parent, args, ctx) {
     throw new AuthenticationError(`Error Authenticating ${args.username}`);
   }
 
-  const token = jwt.sign({ userId: user.id }, AUTH_SECRET);
+  const token = jwt.sign(
+    { userId: user.id, username: user.username },
+    AUTH_SECRET,
+  );
   createAuthCookie(token, ctx);
   return {
     user,

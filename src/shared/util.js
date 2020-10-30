@@ -14,6 +14,16 @@ function startCase(str) {
     .join(' ');
 }
 
+function getAuthenticatedUserUsername(ctx) {
+  const accessToken = ctx.request.cookies.at;
+  if (accessToken) {
+    const { username } = jwt.verify(accessToken, AUTH_SECRET);
+    return username;
+  }
+
+  throw new AuthenticationError('Not Authenticated');
+}
+
 function getAuthenticatedUserId(ctx) {
   const accessToken = ctx.request.cookies.at;
   if (accessToken) {
@@ -46,5 +56,6 @@ module.exports = {
   createAuthCookie,
   destroyAuthCookie,
   getAuthenticatedUserId,
+  getAuthenticatedUserUsername,
   checkUserAuthenticated,
 };
