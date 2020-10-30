@@ -11,6 +11,7 @@ const {
   createAuthCookie,
   destroyAuthCookie,
   getAuthenticatedUserId,
+  getAuthenticatedUserUsername,
   checkUserAuthenticated,
 } = require('../shared/util');
 const { PrismaUniqueConstraintError } = require('../shared/constants');
@@ -370,6 +371,64 @@ async function setCurrentUserNutritionTarget(parent, args, ctx) {
   };
 }
 
+function occasionNamesUnique(occasions) {
+  const nameSet = new Set();
+  for (const { name } of occasions) {
+    if (nameSet.has(name)) {
+      return false;
+    }
+    nameSet.add(name);
+  }
+  return true;
+}
+
+async function setUserMealOccasions(parent, args, ctx) {
+  const currentUser = getAuthenticatedUserUsername(ctx);
+
+  if (currentUser !== args.username) {
+    throw new ForbiddenError('User not authorized');
+  }
+
+  if (!occasionNamesUnique(args.occasions)) {
+    throw new UserInputError('Meal occasion names must be unique');
+  }
+
+  const userId = getAuthenticatedUserId(ctx);
+
+  await ctx.prisma.userMealOccasion.deleteMany({
+    where: {
+      name: {
+        notIn: args.occasions.map(({ name }) => name),
+      },
+    },
+  });
+
+  const requests = args.occasions.map((occasion, i) => {
+    return ctx.prisma.userMealOccasion.upsert({
+      where: {
+        userMealOccasionNameUnique: {
+          userId,
+          name: occasion.name,
+        },
+      },
+      update: {
+        position: i,
+      },
+      create: {
+        name: occasion.name,
+        position: i,
+        user: { connect: { id: userId } },
+      },
+      include: {
+        user: true,
+      },
+    });
+  });
+
+  const result = await ctx.prisma.$transaction(requests);
+  return result[0].user;
+}
+
 module.exports = {
   authenticateUser,
   signup,
@@ -380,4 +439,5 @@ module.exports = {
   logFoodForDate,
   removeFoodFromLoggedMealForDate,
   setCurrentUserNutritionTarget,
+  setUserMealOccasions,
 };

@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["connectOrCreate"]
+  previewFeatures = ["connectOrCreate", "transactionApi"]
 }
 
 datasource db {
@@ -20,15 +20,16 @@ model JournalEntry {
 }
 
 model User {
-  id             String         @id @default(dbgenerated())
-  createdAt      DateTime       @default(now()) @map("created_at")
-  username       String         @unique
-  email          String         @unique
+  id             String             @id @default(dbgenerated())
+  createdAt      DateTime           @default(now()) @map("created_at")
+  username       String             @unique
+  email          String             @unique
   password       String
-  firstName      String?        @map("first_name")
-  lastName       String?        @map("last_name")
+  firstName      String?            @map("first_name")
+  lastName       String?            @map("last_name")
   journalEntries JournalEntry[]
-  targets        UserTarget[]   @relation("user_targetTousers")
+  mealOccasions  UserMealOccasion[] @relation("user_meal_occasionTousers")
+  targets        UserTarget[]       @relation("user_targetTousers")
 
   @@map("users")
 }
@@ -116,4 +117,15 @@ model UserTarget {
 
   @@unique([userId, targetType, targetInfoId], name: "userTargetUnique")
   @@map("user_target")
+}
+
+model UserMealOccasion {
+  id       Int    @id @default(autoincrement())
+  userId   String @map("user_id")
+  name     String @map("occasion_name")
+  position Int
+  user     User   @relation("user_meal_occasionTousers", fields: [userId], references: [id])
+
+  @@unique([userId, name], name: "userMealOccasionNameUnique")
+  @@map("user_meal_occasion")
 }

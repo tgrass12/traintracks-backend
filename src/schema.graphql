@@ -25,6 +25,10 @@ type Mutation {
   ): NutritionLog!
   setCurrentUserNutritionTarget(target: NutritionTargetInput!): NutritionTarget!
   removeFoodFromLoggedMealForDate(logFoodId: ID!): NutritionLog!
+  setUserMealOccasions(
+    username: String!
+    occasions: [MealOccasionInput!]!
+  ): User!
 }
 
 type User {
@@ -33,6 +37,7 @@ type User {
   fullName: String
   email: String!
   journalEntries: [JournalEntry!]!
+  mealOccasions: [String!]!
   targets: [Target!]!
 }
 
@@ -88,6 +93,10 @@ type NutritionTarget implements Target {
 
 type AuthPayload {
   user: User
+}
+
+input MealOccasionInput {
+  name: String!
 }
 
 input FoodInput {
