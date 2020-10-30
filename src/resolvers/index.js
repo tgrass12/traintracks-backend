@@ -7,6 +7,7 @@ const Food = require('./Food');
 const NutritionLog = require('./NutritionLog');
 const MealOccasion = require('./MealOccasion');
 const LoggedFood = require('./LoggedFood');
+const Target = require('./Target');
 
 const Scalars = {
   Date: GraphQLDate,
@@ -22,4 +23,5 @@ module.exports = {
   NutritionLog,
   MealOccasion,
   LoggedFood,
+  Target,
 };

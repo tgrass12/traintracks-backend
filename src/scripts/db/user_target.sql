@@ -9,3 +9,5 @@ CREATE TABLE user_target (
     REFERENCES users(id)
     ON DELETE CASCADE
 );
+
+ALTER TABLE user_target ADD UNIQUE(user_id, target_type, target_info_id);

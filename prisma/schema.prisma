@@ -34,12 +34,12 @@ model User {
 }
 
 model NutritionLog {
-  id                          Int                          @id @default(autoincrement())
-  journalEntryId              Int                          @unique @map("journal_entry_id")
-  waterIntake                 Int                          @default(0) @map("water_intake")
-  journalEntry                JournalEntry                 @relation("journal_entryTonutrition_log", fields: [journalEntryId], references: [id])
-  mealOccasions               LogMealOccasion[]            @relation("log_meal_occasionTonutrition_log")
-  nutritionLogNutrientTargets NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
+  id             Int                          @id @default(autoincrement())
+  journalEntryId Int                          @unique @map("journal_entry_id")
+  waterIntake    Int                          @default(0) @map("water_intake")
+  journalEntry   JournalEntry                 @relation("journal_entryTonutrition_log", fields: [journalEntryId], references: [id])
+  mealOccasions  LogMealOccasion[]            @relation("log_meal_occasionTonutrition_log")
+  targets        NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
 
   @@map("nutrition_log")
 }
@@ -114,5 +114,6 @@ model UserTarget {
   targetInfoId Int    @map("target_info_id")
   user         User   @relation("user_targetTousers", fields: [userId], references: [id])
 
+  @@unique([userId, targetType, targetInfoId], name: "userTargetUnique")
   @@map("user_target")
 }

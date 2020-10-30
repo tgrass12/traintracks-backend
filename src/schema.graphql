@@ -6,6 +6,7 @@ type Query {
   getJournalByUsernameAndDate(username: String!, date: Date!): JournalEntry
   getCurrentUserJournalEntryByDate(date: Date!): JournalEntry
   getCurrentUserNutritionLogByDate(date: Date!): NutritionLog
+  getUserTargets(username: String!, typeFilter: String = ""): [Target!]!
   getJournalEntryRange(startDate: Date!, endDate: Date!): [JournalEntry!]!
 }
 
@@ -22,6 +23,7 @@ type Mutation {
     foodId: ID!
     servings: Float!
   ): NutritionLog!
+  setCurrentUserNutritionTarget(target: NutritionTargetInput!): NutritionTarget!
   removeFoodFromLoggedMealForDate(logFoodId: ID!): NutritionLog!
 }
 
@@ -31,6 +33,7 @@ type User {
   fullName: String
   email: String!
   journalEntries: [JournalEntry!]!
+  targets: [Target!]!
 }
 
 type JournalEntry {
@@ -70,6 +73,19 @@ type Nutrient {
   unit: String!
 }
 
+interface Target {
+  id: ID!
+  type: String!
+}
+
+type NutritionTarget implements Target {
+  id: ID!
+  type: String!
+  nutrientName: String!
+  unit: String!
+  amount: Int!
+}
+
 type AuthPayload {
   user: User
 }
@@ -81,5 +97,11 @@ input FoodInput {
 
 input NutrientInput {
   name: String!
+  amount: Int!
+}
+
+input NutritionTargetInput {
+  nutrientName: String!
+  unit: String!
   amount: Int!
 }

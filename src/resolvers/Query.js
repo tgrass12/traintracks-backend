@@ -65,6 +65,33 @@ async function getCurrentUserNutritionLogByDate(parent, args, ctx) {
   return journal ? journal.nutritionLog : null;
 }
 
+async function getUserTargets(parent, args, ctx) {
+  const userTargets = await ctx.prisma.userTarget.findMany({
+    where: {
+      user: { username: args.username },
+      targetType: { contains: args.typeFilter },
+    },
+  });
+
+  return userTargets.map(async (target) => {
+    let targetInfo;
+    if (target.targetType === 'nutrition') {
+      targetInfo = await ctx.prisma.nutrientInfo.findOne({
+        where: { id: target.targetInfoId },
+      });
+
+      return {
+        type: 'nutrition',
+        nutrientName: targetInfo.name,
+        amount: target.amount,
+        unit: targetInfo.unit,
+      };
+    }
+
+    return null;
+  });
+}
+
 module.exports = {
   user,
   getFoodById,
@@ -72,4 +99,5 @@ module.exports = {
   getCurrentUserJournalEntryByDate,
   getCurrentUserNutritionLogByDate,
   getJournalEntryRange,
+  getUserTargets,
 };

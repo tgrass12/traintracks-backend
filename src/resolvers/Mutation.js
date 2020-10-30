@@ -87,7 +87,6 @@ async function login(parent, args, ctx) {
 }
 
 function logout(parent, args, ctx) {
-  console.log('logging out');
   destroyAuthCookie(ctx);
   return null;
 }
@@ -329,6 +328,39 @@ async function removeFoodFromLoggedMealForDate(parent, args, ctx) {
   return deletedLoggedFood.logMealOccasion.nutritionLog;
 }
 
+async function setCurrentUserNutritionTarget(parent, args, ctx) {
+  const nutrientInfo = await ctx.prisma.nutrientInfo.findOne({
+    where: { name: args.target.nutrientName },
+  });
+
+  const userId = getAuthenticatedUserId(ctx);
+  await ctx.prisma.userTarget.upsert({
+    where: {
+      userTargetUnique: {
+        userId,
+        targetType: 'nutrition',
+        targetInfoId: nutrientInfo.id,
+      },
+    },
+    update: {
+      amount: args.target.amount,
+    },
+    create: {
+      targetType: 'nutrition',
+      amount: args.target.amount,
+      targetInfoId: nutrientInfo.id,
+      user: { connect: { id: userId } },
+    },
+  });
+
+  return {
+    type: 'nutrition',
+    nutrientName: nutrientInfo.name,
+    amount: args.target.amount,
+    unit: nutrientInfo.unit,
+  };
+}
+
 module.exports = {
   authenticateUser,
   signup,
@@ -338,4 +370,5 @@ module.exports = {
   updateWaterIntakeForDate,
   logFoodForDate,
   removeFoodFromLoggedMealForDate,
+  setCurrentUserNutritionTarget,
 };
