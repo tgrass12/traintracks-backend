@@ -1,33 +1,29 @@
 async function targetsByUser(_, { userId, type }, { prisma }) {
-  const userTargets = await prisma.userTarget.findMany({
+  return prisma.userTarget.findMany({
     where: {
       user: { id: userId },
-      targetType: { contains: type },
+      type: { contains: type },
     },
-  });
-
-  return userTargets.map(async (target) => {
-    let targetInfo;
-    if (target.targetType === 'nutrition') {
-      targetInfo = await prisma.nutrientInfo.findOne({
-        where: { id: target.targetInfoId },
-      });
-
-      return {
-        type: 'nutrition',
-        nutrientName: targetInfo.name,
-        amount: target.amount,
-        unit: targetInfo.unit,
-      };
-    }
-
-    return null;
   });
 }
 
+async function nutrient({ targetInfoId }, _, { prisma }) {
+  const nutrientInfo = await prisma.nutrientInfo.findOne({
+    where: { id: targetInfoId },
+  });
+  return nutrientInfo.name;
+}
+
+async function unit({ targetInfoId }, _, { prisma }) {
+  const nutrientInfo = await prisma.nutrientInfo.findOne({
+    where: { id: targetInfoId },
+  });
+  return nutrientInfo.unit;
+}
+
 // eslint-disable-next-line no-underscore-dangle
-const __resolveType = ({ type }) => {
-  switch (type) {
+const __resolveType = (target) => {
+  switch (target.type) {
     case 'nutrition':
       return 'NutritionTarget';
     default:
@@ -41,6 +37,10 @@ const resolvers = {
   },
   Target: {
     __resolveType,
+  },
+  NutritionTarget: {
+    nutrient,
+    unit,
   },
 };
 

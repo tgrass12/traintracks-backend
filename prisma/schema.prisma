@@ -100,12 +100,12 @@ model LogMealOccasion {
 model UserTarget {
   id           Int    @id @default(autoincrement())
   userId       String @map("user_id")
-  targetType   String @map("target_type")
+  type         String @map("target_type")
   amount       Int
   targetInfoId Int    @map("target_info_id")
   user         User   @relation("user_targetTousers", fields: [userId], references: [id])
 
-  @@unique([userId, targetType, targetInfoId], name: "userTargetUnique")
+  @@unique([userId, type, targetInfoId], name: "userTargetUnique")
   @@map("user_target")
 }
 

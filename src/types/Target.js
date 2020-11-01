@@ -7,7 +7,7 @@ interface Target {
 type NutritionTarget implements Target {
   id: ID!
   type: String!
-  nutrientName: String!
+  nutrient: String!
   unit: String!
   amount: Int!
 }
@@ -17,7 +17,7 @@ extend type Query {
 }
 
 input NutritionTargetInput {
-  nutrientName: String!
+  nutrient: String!
   amount: Int!
 }
 `;
