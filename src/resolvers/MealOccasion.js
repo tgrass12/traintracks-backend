@@ -1,10 +1,10 @@
-function loggedFoods({ id }, _, { prisma }) {
+function foods({ id }, _, { prisma }) {
   return prisma.logMealOccasion.findOne({ where: { id } }).foods();
 }
 
 const resolvers = {
   MealOccasion: {
-    loggedFoods,
+    foods,
   },
 };
 

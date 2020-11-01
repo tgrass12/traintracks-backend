@@ -2,7 +2,7 @@ const typeDef = `
 type MealOccasion implements Node {
   id: ID!
   name: String!
-  loggedFoods: [LoggedFood!]!
+  foods: [LoggedFood!]!
 }
 
 input MealOccasionInput {
