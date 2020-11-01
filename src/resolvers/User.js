@@ -91,8 +91,15 @@ async function userSetNutritionTarget(_, { target }, { prisma, request }) {
   };
 }
 
-function journalEntries({ id }, _, { prisma }) {
-  return prisma.user.findOne({ where: { id } }).journalEntries();
+async function journalEntries({ id }, _, { prisma }) {
+  const nutritionLogs = await prisma.user
+    .findOne({ where: { id } })
+    .nutritionLogs();
+
+  return nutritionLogs.map((log) => ({
+    date: log.date,
+    nutrition: log,
+  }));
 }
 
 function targets({ id }, _, { prisma }) {

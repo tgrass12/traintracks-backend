@@ -2,21 +2,16 @@
 const { UserInputError, ForbiddenError } = require('apollo-server-errors');
 const { getAuthenticatedUser } = require('../shared/util');
 
-async function nutritionLogByDate(_, { date }, { prisma, request }) {
+function nutritionLogByDate(_, { date }, { prisma, request }) {
   const { userId } = getAuthenticatedUser(request);
-  const journal = await prisma.journalEntry.findOne({
+  return prisma.nutritionLog.findOne({
     where: {
-      userEntryDateUnique: {
+      userNutritionEntryUnique: {
         userId,
         date,
       },
     },
-    include: {
-      nutritionLog: true,
-    },
   });
-
-  return journal ? journal.nutritionLog : null;
 }
 
 async function nutritionLogUpdateWaterIntake(
@@ -25,45 +20,19 @@ async function nutritionLogUpdateWaterIntake(
   { prisma, request },
 ) {
   const { userId } = getAuthenticatedUser(request);
-  const journalEntry = await prisma.journalEntry.findOne({
+  return prisma.nutritionLog.upsert({
     where: {
-      userEntryDateUnique: {
+      userNutritionEntryUnique: {
         userId,
         date,
       },
     },
-  });
-
-  if (!journalEntry) {
-    return prisma.nutritionLog.create({
-      data: {
-        waterIntake: intakeAmount,
-        journalEntry: {
-          connectOrCreate: {
-            where: {
-              userEntryDateUnique: {
-                userId,
-                date,
-              },
-            },
-            create: {
-              user: { connect: { id: userId } },
-              date,
-            },
-          },
-        },
-      },
-    });
-  }
-
-  return prisma.nutritionLog.upsert({
-    where: {
-      journalEntryId: journalEntry.id,
-    },
     update: { waterIntake: intakeAmount },
     create: {
+      date,
       waterIntake: intakeAmount,
-      journalEntry: { connect: { id: journalEntry.id } },
+      mealOccasions: [],
+      user: { connect: { id: userId } },
     },
   });
 }
@@ -98,45 +67,17 @@ async function nutritionLogAddFood(
     },
   };
 
-  const journalEntry = await prisma.journalEntry.findOne({
+  const { mealOccasions } = await prisma.nutritionLog.findOne({
     where: {
-      userEntryDateUnique: {
-        userId,
+      userNutritionEntryUnique: {
         date,
+        userId,
       },
     },
     include: {
-      nutritionLog: {
-        include: {
-          mealOccasions: true,
-        },
-      },
+      mealOccasions: true,
     },
   });
-
-  if (!journalEntry) {
-    return prisma.nutritionLog.create({
-      data: {
-        mealOccasions: mealOccasionsCreatePartial,
-        journalEntry: {
-          connectOrCreate: {
-            where: {
-              userEntryDateUnique: {
-                userId,
-                date,
-              },
-            },
-            create: {
-              user: { connect: { id: userId } },
-              date,
-            },
-          },
-        },
-      },
-    });
-  }
-
-  const { id: nutritionLogId, mealOccasions } = journalEntry.nutritionLog;
 
   const mealOccasionToUpdate = mealOccasions.find(
     (occasion) => occasion.name === occasionName,
@@ -150,9 +91,16 @@ async function nutritionLogAddFood(
       ...mealOccasionsCreatePartial.create,
       nutritionLog: {
         connectOrCreate: {
-          where: { id: nutritionLogId },
+          where: {
+            userNutritionEntryUnique: {
+              userId,
+              date,
+            },
+          },
           create: {
-            journalEntry: { connect: { id: journalEntry.id } },
+            date,
+            waterIntake: 0,
+            user: { connect: { id: userId } },
           },
         },
       },
@@ -195,11 +143,7 @@ async function nutritionLogRemoveFood(
         include: {
           nutritionLog: {
             include: {
-              journalEntry: {
-                include: {
-                  user: true,
-                },
-              },
+              user: true,
             },
           },
         },
@@ -207,9 +151,7 @@ async function nutritionLogRemoveFood(
     },
   });
 
-  const {
-    id: loggedFoodOwner,
-  } = loggedFood.logMealOccasion.nutritionLog.journalEntry.user;
+  const { id: loggedFoodOwner } = loggedFood.logMealOccasion.nutritionLog.user;
 
   if (loggedFoodOwner !== userId) {
     throw new ForbiddenError(

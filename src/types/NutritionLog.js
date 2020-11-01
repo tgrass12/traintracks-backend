@@ -1,6 +1,7 @@
 const typeDef = `
 type NutritionLog implements Node {
   id: ID!
+  date: Date!
   waterIntake: Int!
   mealOccasions: [MealOccasion!]!
 }

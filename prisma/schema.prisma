@@ -8,40 +8,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model JournalEntry {
-  id           Int           @id @default(autoincrement())
-  userId       String        @map("user_id")
-  date         DateTime
-  user         User          @relation(fields: [userId], references: [id])
-  nutritionLog NutritionLog? @relation("journal_entryTonutrition_log")
-
-  @@unique([userId, date], name: "userEntryDateUnique")
-  @@map("journal_entry")
-}
-
 model User {
-  id             String             @id @default(dbgenerated())
-  createdAt      DateTime           @default(now()) @map("created_at")
-  username       String             @unique
-  email          String             @unique
-  password       String
-  firstName      String?            @map("first_name")
-  lastName       String?            @map("last_name")
-  journalEntries JournalEntry[]
-  mealOccasions  UserMealOccasion[] @relation("user_meal_occasionTousers")
-  targets        UserTarget[]       @relation("user_targetTousers")
+  id            String             @id @default(dbgenerated())
+  createdAt     DateTime           @default(now()) @map("created_at")
+  username      String             @unique
+  email         String             @unique
+  password      String
+  firstName     String?            @map("first_name")
+  lastName      String?            @map("last_name")
+  nutritionLogs NutritionLog[]     @relation("nutrition_logTousers")
+  mealOccasions UserMealOccasion[] @relation("user_meal_occasionTousers")
+  targets       UserTarget[]       @relation("user_targetTousers")
 
   @@map("users")
 }
 
 model NutritionLog {
-  id             Int                          @id @default(autoincrement())
-  journalEntryId Int                          @unique @map("journal_entry_id")
-  waterIntake    Int                          @default(0) @map("water_intake")
-  journalEntry   JournalEntry                 @relation("journal_entryTonutrition_log", fields: [journalEntryId], references: [id])
-  mealOccasions  LogMealOccasion[]            @relation("log_meal_occasionTonutrition_log")
-  targets        NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
+  id            Int               @id @default(autoincrement())
+  userId        String            @map("user_id")
+  date          DateTime          @map("entry_date")
+  waterIntake   Int               @default(0) @map("water_intake")
+  user          User              @relation("nutrition_logTousers", fields: [userId], references: [id])
+  mealOccasions LogMealOccasion[] @relation("log_meal_occasionTonutrition_log")
 
+  @@unique([userId, date], name: "userNutritionEntryUnique")
   @@map("nutrition_log")
 }
 

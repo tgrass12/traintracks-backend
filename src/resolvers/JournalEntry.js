@@ -1,18 +1,23 @@
 const { getAuthenticatedUser } = require('../shared/util');
 
-function journalEntryByDate(_, { date }, { prisma, request }) {
+async function journalEntryByDate(_, { date }, { prisma, request }) {
   const { userId } = getAuthenticatedUser(request);
-  return prisma.journalEntry.findOne({
+  const nutrition = await prisma.nutritionLog.findOne({
     where: {
-      userEntryDateUnique: {
+      userNutritionEntryUnique: {
         userId,
         date,
       },
     },
   });
+
+  return {
+    date,
+    nutrition,
+  };
 }
 
-function journalEntriesByDateRange(
+async function journalEntriesByDateRange(
   _,
   { startDate, endDate },
   { prisma, request },
@@ -26,24 +31,18 @@ function journalEntriesByDateRange(
     },
   };
 
-  return prisma.journalEntry.findMany({ where });
-}
+  const nutritionLogs = await prisma.journalEntry.findMany({ where });
 
-function nutrition({ id }, _, { prisma }) {
-  return prisma.journalEntry
-    .findOne({
-      where: { id },
-    })
-    .nutritionLog();
+  return nutritionLogs.map((log) => ({
+    date: log.date,
+    nutrition: log,
+  }));
 }
 
 const resolvers = {
   Query: {
     journalEntryByDate,
     journalEntriesByDateRange,
-  },
-  JournalEntry: {
-    nutrition,
   },
 };
 
