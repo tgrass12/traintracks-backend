@@ -4,7 +4,7 @@ interface Target {
   type: String!
 }
 
-type NutritionTarget implements Target {
+type NutritionTarget implements Node & Target {
   id: ID!
   type: String!
   nutrient: String!
