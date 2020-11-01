@@ -1,9 +1,13 @@
-function loggedFoods(parent, args, ctx) {
-  return ctx.prisma.logMealOccasion
-    .findOne({ where: { id: parent.id } })
-    .foods();
+function loggedFoods({ id }, _, { prisma }) {
+  return prisma.logMealOccasion.findOne({ where: { id } }).foods();
 }
 
+const resolvers = {
+  MealOccasion: {
+    loggedFoods,
+  },
+};
+
 module.exports = {
-  loggedFoods,
+  resolvers,
 };

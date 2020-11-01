@@ -1,27 +1,28 @@
-const { GraphQLDate } = require('graphql-iso-date');
-const Query = require('./Query');
-const Mutation = require('./Mutation');
-const User = require('./User');
-const JournalEntry = require('./JournalEntry');
-const Food = require('./Food');
-const NutritionLog = require('./NutritionLog');
-const MealOccasion = require('./MealOccasion');
-const LoggedFood = require('./LoggedFood');
-const Target = require('./Target');
+const { mergeResolvers } = require('@graphql-tools/merge');
+const { resolvers: Scalars } = require('./Scalars');
+const { resolvers: Node } = require('./Node');
+const { resolvers: Auth } = require('./Auth');
+const { resolvers: User } = require('./User');
+const { resolvers: Target } = require('./Target');
+const { resolvers: Food } = require('./Food');
+const { resolvers: JournalEntry } = require('./JournalEntry');
+const { resolvers: NutritionLog } = require('./NutritionLog');
+const { resolvers: MealOccasion } = require('./MealOccasion');
+const { resolvers: LoggedFood } = require('./LoggedFood');
 
-const Scalars = {
-  Date: GraphQLDate,
-};
-
-module.exports = {
-  ...Scalars,
-  Query,
-  Mutation,
+const resolvers = [
+  Scalars,
+  Node,
+  Auth,
   User,
+  Target,
   JournalEntry,
   Food,
   NutritionLog,
   MealOccasion,
   LoggedFood,
-  Target,
+];
+
+module.exports = {
+  resolvers: mergeResolvers(resolvers),
 };

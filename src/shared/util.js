@@ -14,48 +14,37 @@ function startCase(str) {
     .join(' ');
 }
 
-function getAuthenticatedUserUsername(ctx) {
-  const accessToken = ctx.request.cookies.at;
-  if (accessToken) {
-    const { username } = jwt.verify(accessToken, AUTH_SECRET);
-    return username;
+function getAuthenticatedUser(request) {
+  const accessToken = request.cookies.at;
+  if (typeof accessToken === 'string') {
+    const { userId, username } = jwt.verify(accessToken, AUTH_SECRET);
+    return { userId, username };
   }
 
   throw new AuthenticationError('Not Authenticated');
 }
 
-function getAuthenticatedUserId(ctx) {
-  const accessToken = ctx.request.cookies.at;
-  if (accessToken) {
-    const { userId } = jwt.verify(accessToken, AUTH_SECRET);
-    return userId;
-  }
-
-  throw new AuthenticationError('Not Authenticated');
+function checkUserAuthenticated(request) {
+  return !!getAuthenticatedUser(request);
 }
 
-function checkUserAuthenticated(ctx) {
-  return !!getAuthenticatedUserId(ctx);
-}
-
-function createAuthCookie(token, ctx) {
+function createAuthCookie(token, request) {
   const options = {
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
   };
 
-  return ctx.request.res.cookie('at', token, options);
+  return request.res.cookie('at', token, options);
 }
 
-function destroyAuthCookie(ctx) {
-  return ctx.request.res.cookie('at', { maxAge: 0 });
+function destroyAuthCookie(request) {
+  return request.res.cookie('at', { maxAge: 0 });
 }
 
 module.exports = {
   startCase,
   createAuthCookie,
   destroyAuthCookie,
-  getAuthenticatedUserId,
-  getAuthenticatedUserUsername,
+  getAuthenticatedUser,
   checkUserAuthenticated,
 };

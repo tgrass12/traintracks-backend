@@ -2,14 +2,15 @@ require('dotenv').config();
 const { GraphQLServer } = require('graphql-yoga');
 const { PrismaClient } = require('@prisma/client');
 const cookieParser = require('cookie-parser');
-const resolvers = require('./resolvers');
+const { typeDefs } = require('./types');
+const { resolvers } = require('./resolvers');
 
 const { PORT } = process.env;
 
 const prisma = new PrismaClient();
 
 const graphqlServer = new GraphQLServer({
-  typeDefs: './src/schema.graphql',
+  typeDefs,
   resolvers,
   context: (request) => {
     return {
