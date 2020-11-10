@@ -7,6 +7,7 @@ type NutritionLog implements Node {
 }
 
 extend type Query {
+  nutritionLog(id: ID!): NutritionLog
   nutritionLogByDate(date: Date!): NutritionLog
 }
 

@@ -2,6 +2,10 @@
 const { UserInputError, ForbiddenError } = require('apollo-server-errors');
 const { getAuthenticatedUser } = require('../shared/util');
 
+function nutritionLog(_, { id }, { prisma }) {
+  return prisma.nutritionLog.findOne({ where: { id: Number(id) } });
+}
+
 function nutritionLogByDate(_, { date }, { prisma, request }) {
   const { userId } = getAuthenticatedUser(request);
   return prisma.nutritionLog.findOne({
@@ -169,6 +173,7 @@ function mealOccasions({ id }, _, { prisma }) {
 
 const resolvers = {
   Query: {
+    nutritionLog,
     nutritionLogByDate,
   },
   Mutation: {
