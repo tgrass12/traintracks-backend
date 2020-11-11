@@ -7,14 +7,18 @@ async function targetsByUser(_, { userId, type }, { prisma }) {
   });
 }
 
-async function nutrient({ targetInfoId }, _, { prisma }) {
+async function name({ nutrient, targetInfoId }, _, { prisma }) {
+  if (nutrient) return nutrient;
+
   const nutrientInfo = await prisma.nutrientInfo.findOne({
     where: { id: targetInfoId },
   });
   return nutrientInfo.name;
 }
 
-async function unit({ targetInfoId }, _, { prisma }) {
+async function unit({ unit, targetInfoId }, _, { prisma }) {
+  if (unit) return unit;
+
   const nutrientInfo = await prisma.nutrientInfo.findOne({
     where: { id: targetInfoId },
   });
@@ -39,7 +43,7 @@ const resolvers = {
     __resolveType,
   },
   NutritionTarget: {
-    nutrient,
+    name,
     unit,
   },
 };

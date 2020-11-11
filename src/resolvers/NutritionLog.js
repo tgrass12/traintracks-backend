@@ -166,6 +166,53 @@ async function nutritionLogRemoveFood(
   return loggedFood.logMealOccasion.nutritionLog;
 }
 
+async function nutritionLogSetTarget(_, { date, target }, { prisma, request }) {
+  const { userId } = getAuthenticatedUser(request);
+
+  const log = await prisma.nutritionLog.findOne({
+    where: {
+      userNutritionEntryUnique: {
+        userId,
+        date,
+      },
+    },
+  });
+
+  if (!log) {
+    throw new UserInputError(`Log for ${userId} on ${date} doesn't exist`);
+  }
+
+  const nutrient = await prisma.nutrientInfo.findOne({
+    where: { name: target.name },
+  });
+
+  if (!nutrient) {
+    throw new UserInputError(`Nutrient ${target.name} doesn't exist`);
+  }
+
+  const newTarget = await prisma.nutritionLogNutrientTarget.upsert({
+    where: {
+      nutritionLogNutrientTargetUnique: {
+        nutritionLogId: log.id,
+        nutrientId: nutrient.id,
+      },
+    },
+    create: {
+      nutritionLog: { connect: { id: log.id } },
+      nutrientInfo: { connect: { id: nutrient.id } },
+      amount: target.amount,
+    },
+    update: {
+      amount: target.amount,
+    },
+    include: {
+      nutritionLog: true,
+    },
+  });
+
+  return newTarget.nutritionLog;
+}
+
 function mealOccasions({ id }, _, { prisma }) {
   return prisma.nutritionLog.findOne({ where: { id } }).mealOccasions();
 }
@@ -223,6 +270,23 @@ async function consumption({ id }, _, { prisma }) {
   }));
 }
 
+async function targets({ id }, _, { prisma }) {
+  const nutritionTargets = await prisma.nutritionLogNutrientTarget.findMany({
+    where: { nutritionLogId: id },
+    include: {
+      nutrientInfo: true,
+    },
+  });
+
+  return nutritionTargets.map((target) => ({
+    id: target.id,
+    type: 'nutrition',
+    nutrient: target.nutrientInfo.name,
+    unit: target.nutrientInfo.unit,
+    amount: target.amount,
+  }));
+}
+
 const resolvers = {
   Query: {
     nutritionLog,
@@ -232,10 +296,12 @@ const resolvers = {
     nutritionLogUpdateWaterIntake,
     nutritionLogAddFood,
     nutritionLogRemoveFood,
+    nutritionLogSetTarget,
   },
   NutritionLog: {
     mealOccasions,
     consumption,
+    targets,
   },
 };
 

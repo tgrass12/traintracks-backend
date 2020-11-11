@@ -5,6 +5,7 @@ type NutritionLog implements Node {
   waterIntake: Int!
   mealOccasions: [MealOccasion!]!
   consumption: [Nutrient!]!
+  targets: [NutritionTarget!]!
 }
 
 extend type Query {
@@ -13,6 +14,7 @@ extend type Query {
 }
 
 extend type Mutation {
+  nutritionLogSetTarget(date: Date!, target: NutrientInput!): NutritionLog!
   nutritionLogUpdateWaterIntake(date: Date!, intakeAmount: Int!): NutritionLog!
   nutritionLogAddFood(date: Date!, foodToLog: LogFoodInput!): NutritionLog!
   nutritionLogRemoveFood(loggedFoodId: ID!): NutritionLog!

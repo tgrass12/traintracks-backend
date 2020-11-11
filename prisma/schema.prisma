@@ -24,12 +24,13 @@ model User {
 }
 
 model NutritionLog {
-  id            Int               @id @default(autoincrement())
-  userId        String            @map("user_id")
-  date          DateTime          @map("entry_date")
-  waterIntake   Int               @default(0) @map("water_intake")
-  user          User              @relation("nutrition_logTousers", fields: [userId], references: [id])
-  mealOccasions LogMealOccasion[] @relation("log_meal_occasionTonutrition_log")
+  id            Int                          @id @default(autoincrement())
+  userId        String                       @map("user_id")
+  date          DateTime                     @map("entry_date")
+  waterIntake   Int                          @default(0) @map("water_intake")
+  user          User                         @relation("nutrition_logTousers", fields: [userId], references: [id])
+  mealOccasions LogMealOccasion[]            @relation("log_meal_occasionTonutrition_log")
+  targets       NutritionLogNutrientTarget[] @relation("nutrition_logTonutrition_log_nutrient_target")
 
   @@unique([userId, date], name: "userNutritionEntryUnique")
   @@map("nutrition_log")
@@ -77,13 +78,14 @@ model NutrientInfo {
 }
 
 model NutritionLogNutrientTarget {
+  id             Int          @id @default(autoincrement())
   nutritionLogId Int          @map("nutrition_log_id")
   nutrientId     Int          @map("nutrient_id")
   amount         Int          @default(0)
   nutrientInfo   NutrientInfo @relation("nutrient_infoTonutrition_log_nutrient_target", fields: [nutrientId], references: [id])
   nutritionLog   NutritionLog @relation("nutrition_logTonutrition_log_nutrient_target", fields: [nutritionLogId], references: [id])
 
-  @@id([nutritionLogId, nutrientId])
+  @@unique([nutritionLogId, nutrientId], name: "nutritionLogNutrientTargetUnique")
   @@map("nutrition_log_nutrient_target")
 }
 

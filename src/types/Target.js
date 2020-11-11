@@ -7,7 +7,7 @@ interface Target {
 type NutritionTarget implements Node & Target {
   id: ID!
   type: String!
-  nutrient: String!
+  name: String!
   unit: String!
   amount: Int!
 }

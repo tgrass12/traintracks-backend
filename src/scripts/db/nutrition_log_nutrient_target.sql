@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS nutrition_log_nutrient_target (
+  id SERIAL PRIMARY KEY,
   nutrition_log_id INT NOT NULL,
   nutrient_id INT NOT NULL,
   amount INT NOT NULL DEFAULT 0,
-  PRIMARY KEY(nutrition_log_id, nutrient_id),
+  UNIQUE(nutrition_log_id, nutrient_id),
   CONSTRAINT fk_nutrition_log
     FOREIGN KEY (nutrition_log_id)
     REFERENCES nutrition_log(id)
