@@ -4,6 +4,7 @@ type NutritionLog implements Node {
   date: Date!
   waterIntake: Int!
   mealOccasions: [MealOccasion!]!
+  consumption: [Nutrient!]!
 }
 
 extend type Query {

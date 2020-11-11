@@ -1,4 +1,3 @@
-/* eslint no-shadow: ["error", { "allow": ["mealOccasions"] }] */
 const { UserInputError, ForbiddenError } = require('apollo-server-errors');
 const { getAuthenticatedUser } = require('../shared/util');
 
@@ -171,6 +170,59 @@ function mealOccasions({ id }, _, { prisma }) {
   return prisma.nutritionLog.findOne({ where: { id } }).mealOccasions();
 }
 
+async function consumption({ id }, _, { prisma }) {
+  const meals = await prisma.logMealOccasion.findMany({
+    where: { nutritionLogId: id },
+    include: {
+      foods: {
+        include: {
+          food: {
+            include: {
+              foodNutrientAmounts: {
+                include: {
+                  nutrientInfo: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const consumption = meals
+    .map((meal) => {
+      return meal.foods.map(({ food, servings }) => {
+        return food.foodNutrientAmounts.map(({ amount, nutrientInfo }) => ({
+          id: nutrientInfo.id,
+          name: nutrientInfo.name,
+          unit: nutrientInfo.unit,
+          amount: Math.round(amount * servings),
+        }));
+      });
+    })
+    .flat(2)
+    .reduce((currentTotals, nutrient) => {
+      if (!currentTotals[nutrient.name]) {
+        currentTotals[nutrient.name] = {
+          amount: 0,
+          unit: nutrient.unit,
+          id: nutrient.id,
+        };
+      }
+
+      currentTotals[nutrient.name].amount += nutrient.amount;
+      return currentTotals;
+    }, {});
+
+  return Object.entries(consumption).map(([name, { id, amount, unit }]) => ({
+    id,
+    name,
+    amount,
+    unit,
+  }));
+}
+
 const resolvers = {
   Query: {
     nutritionLog,
@@ -183,6 +235,7 @@ const resolvers = {
   },
   NutritionLog: {
     mealOccasions,
+    consumption,
   },
 };
 
