@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS log_meal_occasion (
     REFERENCES nutrition_log(id)
     ON DELETE CASCADE
 );
+
+ALTER TABLE log_meal_occasion ADD UNIQUE (nutrition_log_id, occasion_name);

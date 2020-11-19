@@ -96,6 +96,7 @@ model LogMealOccasion {
   nutritionLog   NutritionLog @relation("log_meal_occasionTonutrition_log", fields: [nutritionLogId], references: [id])
   foods          LogFood[]    @relation("log_foodTolog_meal_occasion")
 
+  @@unique([nutritionLogId, name], name: "nutritionLogOccasionNameUnique")
   @@map("log_meal_occasion")
 }
 

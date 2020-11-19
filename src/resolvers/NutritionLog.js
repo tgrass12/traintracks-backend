@@ -17,26 +17,105 @@ function nutritionLogByDate(_, { date }, { prisma, request }) {
   });
 }
 
+async function nutritionLogCreate(
+  _,
+  { date, createOptions = {} },
+  { prisma, request },
+) {
+  const { userId } = getAuthenticatedUser(request);
+  const { waterIntake = 0, logFood, nutritionTarget } = createOptions;
+
+  const targetToSet =
+    nutritionTarget &&
+    (await prisma.nutrientInfo.findOne({
+      where: {
+        name: nutritionTarget.name,
+      },
+    }));
+
+  const { targets, mealOccasions } = await prisma.user.findOne({
+    where: {
+      id: userId,
+    },
+    include: {
+      mealOccasions: true,
+      targets: {
+        where: { type: 'nutrition' },
+      },
+    },
+  });
+
+  return prisma.nutritionLog.create({
+    data: {
+      user: { connect: { id: userId } },
+      date,
+      waterIntake,
+      mealOccasions: {
+        create: mealOccasions.map((occasion) => {
+          const foods =
+            logFood && logFood.mealOccasion === occasion.name
+              ? {
+                  create: {
+                    servings: logFood.servings,
+                    food: {
+                      connect: { id: Number(logFood.foodId) },
+                    },
+                  },
+                }
+              : [];
+
+          return {
+            name: occasion.name,
+            foods,
+          };
+        }),
+      },
+      targets: {
+        create: targets.map((target) => {
+          const amount =
+            nutritionTarget && targetToSet.id === target.targetInfoId
+              ? nutritionTarget.amount
+              : target.amount;
+
+          return {
+            nutrientInfo: { connect: { id: target.targetInfoId } },
+            amount,
+          };
+        }),
+      },
+    },
+  });
+}
+
 async function nutritionLogUpdateWaterIntake(
   _,
   { date, intakeAmount },
   { prisma, request },
 ) {
   const { userId } = getAuthenticatedUser(request);
-  return prisma.nutritionLog.upsert({
+
+  const log = await prisma.nutritionLog.findOne({
     where: {
       userNutritionEntryUnique: {
         userId,
         date,
       },
     },
-    update: { waterIntake: intakeAmount },
-    create: {
-      date,
-      waterIntake: intakeAmount,
-      mealOccasions: [],
-      user: { connect: { id: userId } },
+  });
+
+  if (!log) {
+    const createOptions = { waterIntake: intakeAmount };
+    return nutritionLogCreate(_, { date, createOptions }, { prisma, request });
+  }
+
+  return prisma.nutritionLog.update({
+    where: {
+      userNutritionEntryUnique: {
+        userId,
+        date,
+      },
     },
+    data: { waterIntake: intakeAmount },
   });
 }
 
@@ -54,62 +133,36 @@ async function nutritionLogAddFood(
     throw new UserInputError(`Food with id ${foodId} not found`);
   }
 
-  const logFoodCreatePartial = {
-    create: {
-      servings,
-      food: {
-        connect: { id: Number(foodId) },
-      },
-    },
-  };
-
-  const mealOccasionsCreatePartial = {
-    create: {
-      name: occasionName,
-      foods: logFoodCreatePartial,
-    },
-  };
-
-  const { mealOccasions } = await prisma.nutritionLog.findOne({
+  const log = await prisma.nutritionLog.findOne({
     where: {
       userNutritionEntryUnique: {
         date,
         userId,
       },
     },
-    include: {
-      mealOccasions: true,
-    },
   });
 
-  const mealOccasionToUpdate = mealOccasions.find(
-    (occasion) => occasion.name === occasionName,
-  );
+  if (!log) {
+    const createOptions = { logFood: foodToLog };
+    return nutritionLogCreate(_, { date, createOptions }, { prisma, request });
+  }
 
-  const mealOccasionId = mealOccasionToUpdate ? mealOccasionToUpdate.id : -1;
-
-  const updatedMealOccasion = await prisma.logMealOccasion.upsert({
-    where: { id: mealOccasionId },
-    create: {
-      ...mealOccasionsCreatePartial.create,
-      nutritionLog: {
-        connectOrCreate: {
-          where: {
-            userNutritionEntryUnique: {
-              userId,
-              date,
-            },
-          },
-          create: {
-            date,
-            waterIntake: 0,
-            user: { connect: { id: userId } },
+  const updatedMealOccasion = await prisma.logMealOccasion.update({
+    where: {
+      nutritionLogOccasionNameUnique: {
+        nutritionLogId: log.id,
+        name: occasionName,
+      },
+    },
+    data: {
+      foods: {
+        create: {
+          servings,
+          food: {
+            connect: { id: Number(foodId) },
           },
         },
       },
-    },
-    update: {
-      foods: logFoodCreatePartial,
     },
     include: {
       nutritionLog: true,
@@ -169,6 +222,14 @@ async function nutritionLogRemoveFood(
 async function nutritionLogSetTarget(_, { date, target }, { prisma, request }) {
   const { userId } = getAuthenticatedUser(request);
 
+  const nutrient = await prisma.nutrientInfo.findOne({
+    where: { name: target.name },
+  });
+
+  if (!nutrient) {
+    throw new UserInputError(`Nutrient ${target.name} doesn't exist`);
+  }
+
   const log = await prisma.nutritionLog.findOne({
     where: {
       userNutritionEntryUnique: {
@@ -179,30 +240,18 @@ async function nutritionLogSetTarget(_, { date, target }, { prisma, request }) {
   });
 
   if (!log) {
-    throw new UserInputError(`Log for ${userId} on ${date} doesn't exist`);
+    const createOptions = { nutritionTarget: target };
+    return nutritionLogCreate(_, { date, createOptions }, { prisma, request });
   }
 
-  const nutrient = await prisma.nutrientInfo.findOne({
-    where: { name: target.name },
-  });
-
-  if (!nutrient) {
-    throw new UserInputError(`Nutrient ${target.name} doesn't exist`);
-  }
-
-  const newTarget = await prisma.nutritionLogNutrientTarget.upsert({
+  const newTarget = await prisma.nutritionLogNutrientTarget.update({
     where: {
       nutritionLogNutrientTargetUnique: {
         nutritionLogId: log.id,
         nutrientId: nutrient.id,
       },
     },
-    create: {
-      nutritionLog: { connect: { id: log.id } },
-      nutrientInfo: { connect: { id: nutrient.id } },
-      amount: target.amount,
-    },
-    update: {
+    data: {
       amount: target.amount,
     },
     include: {
@@ -293,6 +342,7 @@ const resolvers = {
     nutritionLogByDate,
   },
   Mutation: {
+    nutritionLogCreate,
     nutritionLogUpdateWaterIntake,
     nutritionLogAddFood,
     nutritionLogRemoveFood,

@@ -14,10 +14,17 @@ extend type Query {
 }
 
 extend type Mutation {
+  nutritionLogCreate(date: Date!, createOptions: NutritionLogCreateInput): NutritionLog!
   nutritionLogSetTarget(date: Date!, target: NutrientInput!): NutritionLog!
   nutritionLogUpdateWaterIntake(date: Date!, intakeAmount: Int!): NutritionLog!
   nutritionLogAddFood(date: Date!, foodToLog: LogFoodInput!): NutritionLog!
   nutritionLogRemoveFood(loggedFoodId: ID!): NutritionLog!
+}
+
+input NutritionLogCreateInput {
+  waterIntake: Int
+  logFood: LogFoodInput
+  nutritionTarget: NutritionTargetInput
 }
 
 input LogFoodInput {
